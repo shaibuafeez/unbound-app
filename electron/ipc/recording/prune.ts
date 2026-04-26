@@ -1,14 +1,19 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 import {
-	AUTO_RECORDING_RETENTION_COUNT,
 	AUTO_RECORDING_MAX_AGE_MS,
-	PROJECT_FILE_EXTENSION,
-	LEGACY_PROJECT_FILE_EXTENSIONS,
+	AUTO_RECORDING_RETENTION_COUNT,
 	COMPANION_AUDIO_LAYOUTS,
+	LEGACY_PROJECT_FILE_EXTENSIONS,
+	PROJECT_FILE_EXTENSION,
 } from "../constants";
 import { currentVideoPath } from "../state";
-import { normalizePath, getTelemetryPathForVideo, isAutoRecordingPath, getRecordingsDir } from "../utils";
+import {
+	getRecordingsDir,
+	getTelemetryPathForVideo,
+	isAutoRecordingPath,
+	normalizePath,
+} from "../utils";
 
 export async function hasSiblingProjectFile(videoPath: string) {
 	const baseName = path.basename(videoPath, path.extname(videoPath));
@@ -78,7 +83,10 @@ export async function pruneAutoRecordings(exemptPaths: string[] = []) {
 			const base = entry.filePath.replace(/\.(mp4|mov|webm)$/i, "");
 			const companionSuffixes = Array.from(
 				new Set(
-					COMPANION_AUDIO_LAYOUTS.flatMap((layout) => [layout.systemSuffix, layout.micSuffix]),
+					COMPANION_AUDIO_LAYOUTS.flatMap((layout) => [
+						layout.systemSuffix,
+						layout.micSuffix,
+					]),
 				),
 			);
 			for (const suffix of companionSuffixes) {

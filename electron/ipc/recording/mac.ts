@@ -3,44 +3,41 @@ import { execFile } from "node:child_process";
 import fs from "node:fs/promises";
 import { promisify } from "node:util";
 import { BrowserWindow } from "electron";
+import {
+	persistPendingCursorTelemetry,
+	snapshotCursorTelemetryForPersistence,
+} from "../cursor/telemetry";
 import { getFfmpegBinaryPath } from "../ffmpeg/binary";
+import { appendSyncedAudioFilter, getAudioSyncAdjustment } from "../ffmpeg/filters";
 import {
-	getAudioSyncAdjustment,
-	appendSyncedAudioFilter,
-} from "../ffmpeg/filters";
-import type { AudioSyncAdjustment } from "../types";
-import {
-	nativeScreenRecordingActive,
-	setNativeScreenRecordingActive,
-	setNativeCaptureProcess,
-	nativeCaptureOutputBuffer,
-	nativeCaptureTargetPath,
-	setNativeCaptureTargetPath,
-	nativeCaptureStopRequested,
-	setNativeCaptureStopRequested,
-	nativeCaptureSystemAudioPath,
-	setNativeCaptureSystemAudioPath,
-	nativeCaptureMicrophonePath,
-	setNativeCaptureMicrophonePath,
 	lastNativeCaptureDiagnostics,
-	setCurrentVideoPath,
-	setCurrentProjectPath,
+	nativeCaptureMicrophonePath,
+	nativeCaptureOutputBuffer,
+	nativeCaptureStopRequested,
+	nativeCaptureSystemAudioPath,
+	nativeCaptureTargetPath,
+	nativeScreenRecordingActive,
 	selectedSource,
+	setCurrentProjectPath,
+	setCurrentVideoPath,
+	setNativeCaptureMicrophonePath,
+	setNativeCaptureProcess,
+	setNativeCaptureStopRequested,
+	setNativeCaptureSystemAudioPath,
+	setNativeCaptureTargetPath,
+	setNativeScreenRecordingActive,
 } from "../state";
-import { moveFileWithOverwrite, isAutoRecordingPath } from "../utils";
+import type { AudioSyncAdjustment } from "../types";
+import { isAutoRecordingPath, moveFileWithOverwrite } from "../utils";
 import {
-	recordNativeCaptureDiagnostics,
 	getFileSizeIfPresent,
-	validateRecordedVideo,
 	getUsableCompanionAudioCandidates,
+	probeMediaDurationSeconds,
+	recordNativeCaptureDiagnostics,
+	validateRecordedVideo,
 } from "./diagnostics";
-import { probeMediaDurationSeconds } from "./diagnostics";
 import { emitRecordingInterrupted } from "./events";
 import { pruneAutoRecordings } from "./prune";
-import {
-	snapshotCursorTelemetryForPersistence,
-	persistPendingCursorTelemetry,
-} from "../cursor/telemetry";
 import { muxNativeWindowsVideoWithAudio } from "./windows";
 
 const execFileAsync = promisify(execFile);

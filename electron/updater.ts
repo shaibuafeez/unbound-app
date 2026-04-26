@@ -105,7 +105,7 @@ function createAutoCheckErrorToastPayload(): UpdateToastPayload {
 	return {
 		version: app.getVersion(),
 		phase: "error",
-		detail: "Recordly could not check for updates automatically. Retry now, or inspect updater.log in your user data folder.",
+		detail: "Unbound could not check for updates automatically. Retry now, or inspect updater.log in your user data folder.",
 		delayMs: UPDATE_REMINDER_DELAY_MS,
 		primaryAction: "retry-check",
 	};
@@ -196,7 +196,7 @@ function createDownloadingUpdateToastPayload(
 		phase: "downloading",
 		detail:
 			normalizedProgress >= 100
-				? "Finishing the update download. You can keep using Recordly while this completes."
+				? "Finishing the update download. You can keep using Unbound while this completes."
 				: `Downloading the update in the foreground: ${normalizedProgress.toFixed(0)}% complete.`,
 		delayMs: UPDATE_REMINDER_DELAY_MS,
 		progressPercent: normalizedProgress,
@@ -255,7 +255,7 @@ async function showNoUpdatesDialog(getMainWindow: () => BrowserWindow | null) {
 	await showMessageBox(getMainWindow, {
 		type: "info",
 		title: "No Updates Available",
-		message: "Recordly is up to date.",
+		message: "Unbound is up to date.",
 		detail: `You are running version ${app.getVersion()}.`,
 	});
 }
@@ -264,7 +264,7 @@ async function showUpdateErrorDialog(getMainWindow: () => BrowserWindow | null, 
 	await showMessageBox(getMainWindow, {
 		type: "error",
 		title: "Update Check Failed",
-		message: "Recordly could not check for updates.",
+		message: "Unbound could not check for updates.",
 		detail: String(error),
 	});
 }
@@ -389,7 +389,7 @@ export async function downloadAvailableUpdate(sendToRenderer?: UpdateToastSender
 	setUpdateStatusSummary({
 		status: "downloading",
 		availableVersion,
-		detail: `Downloading Recordly ${availableVersion}`,
+		detail: `Downloading Unbound ${availableVersion}`,
 	});
 	emitUpdateToastState(sendToRenderer, createDownloadingUpdateToastPayload(availableVersion, 0));
 	writeUpdaterLog(`Starting update download for ${availableVersion}.`);
@@ -492,7 +492,7 @@ async function showAvailableUpdateDialog(
 	const result = await showMessageBox(getMainWindow, {
 		type: "info",
 		title: "Update Available",
-		message: `Recordly ${version} is available.`,
+		message: `Unbound ${version} is available.`,
 		detail: "Download now, remind me in 3 hours, or skip this version.",
 		buttons: ["Download Update", "Remind Me in 3 Hours", "Skip This Version"],
 		defaultId: 0,
@@ -523,8 +523,8 @@ async function showDownloadedUpdateDialog(
 		type: "info",
 		title: "Update Ready",
 		message: isPreview
-			? `Recordly ${version} is ready to install.`
-			: `Recordly ${version} has been downloaded.`,
+			? `Unbound ${version} is ready to install.`
+			: `Unbound ${version} has been downloaded.`,
 		detail: isPreview
 			? "Development preview of the native update prompt. No real update will be installed."
 			: "Install now, remind me in 3 hours, or skip this version.",
@@ -595,7 +595,7 @@ export async function checkForAppUpdates(
 			await showMessageBox(getMainWindow, {
 				type: "info",
 				title: "Update Check In Progress",
-				message: "Recordly is already checking for updates.",
+				message: "Unbound is already checking for updates.",
 			});
 		}
 		return;
@@ -668,7 +668,7 @@ export function setupAutoUpdates(
 		setUpdateStatusSummary({
 			status: "available",
 			availableVersion: info.version,
-			detail: `Recordly ${info.version} is available.`,
+			detail: `Unbound ${info.version} is available.`,
 		});
 		if (skippedVersion === info.version) {
 			manualCheckRequested = false;
@@ -697,7 +697,7 @@ export function setupAutoUpdates(
 		setUpdateStatusSummary({
 			status: "up-to-date",
 			availableVersion: null,
-			detail: `Recordly ${app.getVersion()} is up to date.`,
+			detail: `Unbound ${app.getVersion()} is up to date.`,
 		});
 		clearVisibleUpdateToast(sendToRenderer);
 		const shouldReport = manualCheckRequested;
@@ -716,7 +716,7 @@ export function setupAutoUpdates(
 		setUpdateStatusSummary({
 			status: "downloading",
 			availableVersion,
-			detail: `Downloading Recordly ${availableVersion}`,
+			detail: `Downloading Unbound ${availableVersion}`,
 		});
 		writeUpdaterLog(
 			`Download progress for ${availableVersion}: ${progress.percent.toFixed(1)}%`,
@@ -774,7 +774,7 @@ export function setupAutoUpdates(
 		setUpdateStatusSummary({
 			status: "ready",
 			availableVersion: info.version,
-			detail: `Recordly ${info.version} is ready to install.`,
+			detail: `Unbound ${info.version} is ready to install.`,
 		});
 		clearDeferredReminderTimer();
 

@@ -330,9 +330,9 @@ interface Window {
 		getCurrentVideoPath: () => Promise<{ success: boolean; path?: string }>;
 		clearCurrentVideoPath: () => Promise<{ success: boolean }>;
 		deleteRecordingFile: (filePath: string) => Promise<{ success: boolean; error?: string }>;
-		getLocalMediaUrl: (filePath: string) => Promise<
-			{ success: true; url: string } | { success: false }
-		>;
+		getLocalMediaUrl: (
+			filePath: string,
+		) => Promise<{ success: true; url: string } | { success: false }>;
 		saveProjectFile: (
 			projectData: unknown,
 			suggestedName?: string,
@@ -474,6 +474,190 @@ interface Window {
 		cancelCountdown: () => Promise<{ success: boolean }>;
 		getActiveCountdown: () => Promise<{ success: boolean; seconds: number | null }>;
 		onCountdownTick: (callback: (seconds: number) => void) => () => void;
+		// AI (0G Compute — Wallet-based)
+		getAiSettings: () => Promise<{
+			success: boolean;
+			network: string;
+			selectedChatProvider: string;
+			selectedSttProvider: string;
+			walletAddress: string;
+			isInitialized: boolean;
+			hasPrivateKey: boolean;
+			error?: string;
+		}>;
+		saveAiSettings: (settings: {
+			network?: "testnet" | "mainnet";
+			selectedChatProvider?: string;
+			selectedSttProvider?: string;
+		}) => Promise<{ success: boolean; error?: string }>;
+		generateAiWallet: () => Promise<{
+			success: boolean;
+			address?: string;
+			privateKey?: string;
+			error?: string;
+		}>;
+		initializeAiWallet: (options?: {
+			privateKey?: string;
+			network?: "testnet" | "mainnet";
+		}) => Promise<{
+			success: boolean;
+			walletAddress?: string;
+			networkChanged?: boolean;
+			error?: string;
+		}>;
+		logoutAiWallet: () => Promise<{
+			success: boolean;
+			network?: "testnet" | "mainnet";
+			error?: string;
+		}>;
+		getAiBalance: () => Promise<{
+			success: boolean;
+			totalBalance?: string;
+			availableBalance?: string;
+			lockedBalance?: string;
+			error?: string;
+		}>;
+		depositAiFunds: (options: { amount: number }) => Promise<{
+			success: boolean;
+			error?: string;
+		}>;
+		transferAiFunds: (options: { provider: string; amount: number }) => Promise<{
+			success: boolean;
+			error?: string;
+		}>;
+		listAiProviders: () => Promise<{
+			success: boolean;
+			chatbot: Array<{
+				provider: string;
+				model: string;
+				serviceType: string;
+				inputPrice?: string;
+				outputPrice?: string;
+				verifiability?: string;
+			}>;
+			stt: Array<{
+				provider: string;
+				model: string;
+				serviceType: string;
+				inputPrice?: string;
+				outputPrice?: string;
+				verifiability?: string;
+			}>;
+			error?: string;
+		}>;
+		testAiConnection: () => Promise<{ success: boolean; error?: string }>;
+		generateAiCaptions: (options: {
+			videoPath: string;
+			language?: string;
+			provider?: string;
+		}) => Promise<{
+			success: boolean;
+			cues?: AutoCaptionCue[];
+			message?: string;
+			error?: string;
+		}>;
+		translateAiCaptions: (options: {
+			cues: Array<{ id: string; startMs: number; endMs: number; text: string }>;
+			sourceLanguage: string;
+			targetLanguage: string;
+			provider?: string;
+		}) => Promise<{
+			success: boolean;
+			cues?: AutoCaptionCue[];
+			message?: string;
+			error?: string;
+		}>;
+		generateAiMetadata: (options: {
+			transcript: string;
+			type: "title" | "description" | "chapters";
+			provider?: string;
+		}) => Promise<{
+			success: boolean;
+			content?: string;
+			type?: string;
+			error?: string;
+		}>;
+		aiChat: (options: {
+			messages: Array<{ role: string; content: string }>;
+		}) => Promise<{ success: boolean; content?: string; error?: string }>;
+		onAiChatStreamChunk: (callback: (payload: { content: string }) => void) => () => void;
+		onAiChatStreamDone: (
+			callback: (payload: { content: string; error?: string }) => void,
+		) => () => void;
+		// LuxTTS (Voice Dubbing — Local)
+		checkLuxTtsAvailable: () => Promise<{
+			available: boolean;
+			error?: string;
+		}>;
+		cloneVoiceFromVideo: (options: {
+			videoPath: string;
+			sampleWindow?: { startMs: number; endMs: number };
+		}) => Promise<{
+			success: boolean;
+			refWavPath?: string;
+			error?: string;
+		}>;
+		generateDubbedAudio: (options: {
+			cues: Array<{ startMs: number; endMs: number; text: string }>;
+			refWavPath: string;
+			totalDurationMs: number;
+		}) => Promise<{
+			success: boolean;
+			audioData?: ArrayBuffer;
+			error?: string;
+		}>;
+		materializeDubbedAudio: (options: { audioData: ArrayBuffer }) => Promise<{
+			success: boolean;
+			path?: string;
+			error?: string;
+		}>;
+		cleanupMaterializedDubbedAudio: (filePath: string) => Promise<{
+			success: boolean;
+			error?: string;
+		}>;
+		onDubProgress: (
+			callback: (payload: { current: number; total: number }) => void,
+		) => () => void;
+		// Lip Sync (Wav2Lip)
+		checkLipSyncAvailable: () => Promise<{
+			available: boolean;
+			error?: string;
+		}>;
+		getLipSyncModelStatus: () => Promise<{
+			wav2lipExists: boolean;
+			s3fdExists: boolean;
+		}>;
+		downloadLipSyncModels: () => Promise<{
+			success: boolean;
+			error?: string;
+		}>;
+		deleteLipSyncModels: () => Promise<{
+			success: boolean;
+			error?: string;
+		}>;
+		generateLipSyncVideo: (options: {
+			videoPath: string;
+			dubbedAudioData: ArrayBuffer;
+		}) => Promise<{
+			success: boolean;
+			outputPath?: string;
+			error?: string;
+		}>;
+		cleanupLipSyncVideo: (filePath: string) => Promise<{
+			success: boolean;
+			error?: string;
+		}>;
+		onLipSyncProgress: (
+			callback: (payload: { phase: string; current: number; total: number }) => void,
+		) => () => void;
+		onLipSyncModelDownloadProgress: (
+			callback: (payload: {
+				status: "idle" | "downloading" | "downloaded" | "error";
+				progress: number;
+				file?: string;
+				error?: string;
+			}) => void,
+		) => () => void;
 		extensionsDiscover: () => Promise<RendererExtensionInfo[]>;
 		extensionsList: () => Promise<RendererExtensionInfo[]>;
 		extensionsGet: (id: string) => Promise<RendererExtensionInfo | null>;

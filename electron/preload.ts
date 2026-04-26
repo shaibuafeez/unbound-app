@@ -570,6 +570,122 @@ contextBridge.exposeInMainWorld("electronAPI", {
 		return () => ipcRenderer.removeListener("countdown-tick", listener);
 	},
 
+	// ── AI (0G Compute) ─────────────────────────────────────────────────
+	getAiSettings: () => ipcRenderer.invoke("get-ai-settings"),
+	saveAiSettings: (settings: {
+		network?: "testnet" | "mainnet";
+		selectedChatProvider?: string;
+		selectedSttProvider?: string;
+	}) => ipcRenderer.invoke("save-ai-settings", settings),
+	generateAiWallet: () => ipcRenderer.invoke("generate-ai-wallet"),
+	initializeAiWallet: (options?: { privateKey?: string; network?: "testnet" | "mainnet" }) =>
+		ipcRenderer.invoke("initialize-ai-wallet", options),
+	logoutAiWallet: () => ipcRenderer.invoke("logout-ai-wallet"),
+	getAiBalance: () => ipcRenderer.invoke("get-ai-balance"),
+	depositAiFunds: (options: { amount: number }) =>
+		ipcRenderer.invoke("deposit-ai-funds", options),
+	transferAiFunds: (options: { provider: string; amount: number }) =>
+		ipcRenderer.invoke("transfer-ai-funds", options),
+	listAiProviders: () => ipcRenderer.invoke("list-ai-providers"),
+	testAiConnection: () => ipcRenderer.invoke("test-ai-connection"),
+	generateAiCaptions: (options: {
+		videoPath: string;
+		language?: string;
+		provider?: string;
+	}) =>
+		ipcRenderer.invoke("generate-ai-captions", options),
+	translateAiCaptions: (options: {
+		cues: Array<{ id: string; startMs: number; endMs: number; text: string }>;
+		sourceLanguage: string;
+		targetLanguage: string;
+		provider?: string;
+	}) => ipcRenderer.invoke("translate-ai-captions", options),
+	generateAiMetadata: (options: {
+		transcript: string;
+		type: "title" | "description" | "chapters";
+		provider?: string;
+	}) => ipcRenderer.invoke("generate-ai-metadata", options),
+	aiChat: (options: { messages: Array<{ role: string; content: string }> }) =>
+		ipcRenderer.invoke("ai-chat", options),
+	onAiChatStreamChunk: (callback: (payload: { content: string }) => void) => {
+		const listener = (_event: Electron.IpcRendererEvent, payload: { content: string }) =>
+			callback(payload);
+		ipcRenderer.on("ai-chat-stream-chunk", listener);
+		return () => ipcRenderer.removeListener("ai-chat-stream-chunk", listener);
+	},
+	onAiChatStreamDone: (callback: (payload: { content: string; error?: string }) => void) => {
+		const listener = (
+			_event: Electron.IpcRendererEvent,
+			payload: { content: string; error?: string },
+		) => callback(payload);
+		ipcRenderer.on("ai-chat-stream-done", listener);
+		return () => ipcRenderer.removeListener("ai-chat-stream-done", listener);
+	},
+
+	// ── LuxTTS (Voice Dubbing — Local) ──────────────────────────────────
+	checkLuxTtsAvailable: () => ipcRenderer.invoke("check-lux-tts-available"),
+	cloneVoiceFromVideo: (options: {
+		videoPath: string;
+		sampleWindow?: { startMs: number; endMs: number };
+	}) => ipcRenderer.invoke("clone-voice-from-video", options),
+	generateDubbedAudio: (options: {
+		cues: Array<{ startMs: number; endMs: number; text: string }>;
+		refWavPath: string;
+		totalDurationMs: number;
+	}) => ipcRenderer.invoke("generate-dubbed-audio", options),
+	materializeDubbedAudio: (options: { audioData: ArrayBuffer }) =>
+		ipcRenderer.invoke("materialize-dubbed-audio", options),
+	cleanupMaterializedDubbedAudio: (filePath: string) =>
+		ipcRenderer.invoke("cleanup-materialized-dubbed-audio", { filePath }),
+	onDubProgress: (callback: (payload: { current: number; total: number }) => void) => {
+		const listener = (
+			_event: Electron.IpcRendererEvent,
+			payload: { current: number; total: number },
+		) => callback(payload);
+		ipcRenderer.on("dub-progress", listener);
+		return () => ipcRenderer.removeListener("dub-progress", listener);
+	},
+
+	// ── Lip Sync (Wav2Lip) ──────────────────────────────────────────────
+	checkLipSyncAvailable: () => ipcRenderer.invoke("check-lip-sync-available"),
+	getLipSyncModelStatus: () => ipcRenderer.invoke("get-lip-sync-model-status"),
+	downloadLipSyncModels: () => ipcRenderer.invoke("download-lip-sync-models"),
+	deleteLipSyncModels: () => ipcRenderer.invoke("delete-lip-sync-models"),
+	generateLipSyncVideo: (options: { videoPath: string; dubbedAudioData: ArrayBuffer }) =>
+		ipcRenderer.invoke("generate-lip-sync-video", options),
+	cleanupLipSyncVideo: (filePath: string) =>
+		ipcRenderer.invoke("cleanup-lip-sync-video", { filePath }),
+	onLipSyncProgress: (
+		callback: (payload: { phase: string; current: number; total: number }) => void,
+	) => {
+		const listener = (
+			_event: Electron.IpcRendererEvent,
+			payload: { phase: string; current: number; total: number },
+		) => callback(payload);
+		ipcRenderer.on("lip-sync-progress", listener);
+		return () => ipcRenderer.removeListener("lip-sync-progress", listener);
+	},
+	onLipSyncModelDownloadProgress: (
+		callback: (payload: {
+			status: "idle" | "downloading" | "downloaded" | "error";
+			progress: number;
+			file?: string;
+			error?: string;
+		}) => void,
+	) => {
+		const listener = (
+			_event: Electron.IpcRendererEvent,
+			payload: {
+				status: "idle" | "downloading" | "downloaded" | "error";
+				progress: number;
+				file?: string;
+				error?: string;
+			},
+		) => callback(payload);
+		ipcRenderer.on("lip-sync-model-download-progress", listener);
+		return () => ipcRenderer.removeListener("lip-sync-model-download-progress", listener);
+	},
+
 	// ── Extensions ──────────────────────────────────────────────────────
 	extensionsDiscover: () => ipcRenderer.invoke("extensions:discover"),
 	extensionsList: () => ipcRenderer.invoke("extensions:list"),

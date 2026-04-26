@@ -1,7 +1,7 @@
 // @see - https://www.electron.build/configuration/configuration
 {
   "$schema": "https://raw.githubusercontent.com/electron-userland/electron-builder/master/packages/app-builder-lib/scheme.json",
-  "appId": "dev.recordly.app",
+  "appId": "dev.unbound.app",
   "electronUpdaterCompatibility": ">=2.16",
   "asar": true,
   "asarUnpack": [
@@ -9,7 +9,7 @@
     "node_modules/uiohook-napi/**",
     "electron/native/**"
   ],
-  "productName": "Recordly",
+  "productName": "Unbound",
   "npmRebuild": true,
   "buildDependenciesFromSource": true,
   "compression": "normal",
@@ -37,7 +37,7 @@
     {
       "provider": "github",
       "owner": "webadderall",
-      "repo": "Recordly",
+      "repo": "Unbound",
       "tagNamePrefix": "v",
       "publishAutoUpdate": true
     }
@@ -60,9 +60,9 @@
     "icon": "icons/icons/mac/icon.icns",
     "artifactName": "${productName}-${arch}.${ext}",
     "extendInfo": {
-      "NSAudioCaptureUsageDescription": "Recordly needs audio capture permission to record system audio.",
-      "NSCameraUsageDescription": "Recordly needs camera access to record webcam video.",
-      "NSMicrophoneUsageDescription": "Recordly needs microphone access to record voice audio.",
+      "NSAudioCaptureUsageDescription": "Unbound needs audio capture permission to record system audio.",
+      "NSCameraUsageDescription": "Unbound needs camera access to record webcam video.",
+      "NSMicrophoneUsageDescription": "Unbound needs microphone access to record voice audio.",
       "NSCameraUseContinuityCameraDeviceType": true,
       "com.apple.security.device.audio-input": true
     }
@@ -81,7 +81,7 @@
     ],
     "icon": "icons/icons/win/icon.ico"
     ,
-    "executableName": "Recordly",
+    "executableName": "Unbound",
     "artifactName": "${productName}-windows-${arch}.${ext}"
   }
 }

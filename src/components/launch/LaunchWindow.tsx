@@ -1,27 +1,27 @@
 import {
 	AppWindow,
 	ArrowCircleUp as ArrowUpCircle,
-	ArrowClockwise as RefreshCw,
-	CaretUp as ChevronUp,
 	CheckCircle as CheckCircle2,
-	DotsThreeVertical as MoreVertical,
+	CaretUp as ChevronUp,
 	Eye,
 	EyeSlash as EyeOff,
 	FolderOpen,
+	Translate as Languages,
 	Microphone as Mic,
 	MicrophoneSlash as MicOff,
 	Minus,
 	Monitor,
+	DotsThreeVertical as MoreVertical,
 	Pause,
 	Play,
-	SpeakerHigh as Volume2,
-	SpeakerX as VolumeX,
+	ArrowClockwise as RefreshCw,
 	Stop as Square,
 	Timer,
-	Translate as Languages,
 	VideoCamera as Video,
 	VideoCamera as VideoIcon,
 	VideoCameraSlash as VideoOff,
+	SpeakerHigh as Volume2,
+	SpeakerX as VolumeX,
 	X,
 } from "@phosphor-icons/react";
 import { AnimatePresence, motion } from "motion/react";
@@ -963,13 +963,13 @@ export function LaunchWindow() {
 	const updateButtonTitle = (() => {
 		switch (updateStatus.status) {
 			case "up-to-date":
-				return t("recording.update.upToDateTitle", "Recordly {{version}} is up to date.", {
+				return t("recording.update.upToDateTitle", "Unbound {{version}} is up to date.", {
 					version: updateStatus.currentVersion,
 				});
 			case "available":
 			case "ready":
 				return updateStatus.availableVersion
-					? t("recording.update.availableTitle", "Recordly {{version}} is available.", {
+					? t("recording.update.availableTitle", "Unbound {{version}} is available.", {
 							version: updateStatus.availableVersion,
 						})
 					: t("recording.update.availableGenericTitle");

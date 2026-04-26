@@ -1,9 +1,9 @@
-# Recordly
+# Unbound
 
 Language: EN | [简中](README.zh-CN.md)
 
 <p align="center">
-  <img src="https://i.postimg.cc/tRnL8gHp/Frame-5.png" width="220" alt="Recordly logo">
+  <img src="https://i.postimg.cc/tRnL8gHp/Frame-5.png" width="220" alt="Unbound logo">
 </p>
 
 <p align="center">
@@ -12,7 +12,7 @@ Language: EN | [简中](README.zh-CN.md)
 </p>
 
 ### Create polished, pro-grade screen recordings.
-[Recordly](https://www.recordly.dev) is an **open-source screen recorder** and editor for **walkthroughs, demos, product videos**, and more. 
+[Unbound](https://www.unbound.dev) is an **open-source screen recorder** and editor for **walkthroughs, demos, product videos**, and more. 
 
 **Contribution encouraged.** [Donate](https://ko-fi.com/webadderall/goal?g=0)
 
@@ -20,11 +20,11 @@ https://github.com/user-attachments/assets/1446cd12-c053-4b9c-b49f-d9c93db77fc4
 
 ---
 
-## What is Recordly?
+## What is Unbound?
 
-Recordly is a desktop app for recording and editing screen captures with motion-driven presentation tools built in. Instead of sending raw footage to a motion designer just to add zooms, cursor polish, or a styled background, Recordly handles that workflow in one place for free.
+Unbound is a desktop app for recording and editing screen captures with motion-driven presentation tools built in. Instead of sending raw footage to a motion designer just to add zooms, cursor polish, or a styled background, Unbound handles that workflow in one place for free.
 
-Recordly runs on:
+Unbound runs on:
 
 - **macOS** 14.0+
 - **Windows** 10 Build 19041+
@@ -41,31 +41,31 @@ Platform notes:
 # Core Features
 
 ## Auto-zooms, cursor polish, and styled frames
-Recordly can automatically emphasize activity with zoom suggestions, smooth cursor movement, add motion effects, and place the final composition inside a styled frame with wallpapers, colors, gradients, blur, padding, and shadows.
+Unbound can automatically emphasize activity with zoom suggestions, smooth cursor movement, add motion effects, and place the final composition inside a styled frame with wallpapers, colors, gradients, blur, padding, and shadows.
 
 <p>
-  <img src="./feature1.gif" width="450" alt="Recordly cursor and zoom demo video">
+  <img src="./feature1.gif" width="450" alt="Unbound cursor and zoom demo video">
 </p>
 
 ## Dynamic webcam bubble overlays
 Add webcam footage as an overlay bubble, position it with presets or custom coordinates, mirror it, control shadow and roundness, and optionally make it react to zoom so it stays visually balanced during motion.
 
 <p>
-  <img src="./feature2.gif" width="450" alt="Recordly webcam overlay demo video">
+  <img src="./feature2.gif" width="450" alt="Unbound webcam overlay demo video">
 </p>
 
 ## Timeline editing built for demos
-Use drag-and-drop timeline tools for zooms, trims, speed regions, annotations, extra audio regions, and crop-aware edits. Save and reopen work as `.recordly` project files.
+Use drag-and-drop timeline tools for zooms, trims, speed regions, annotations, extra audio regions, and crop-aware edits. Save and reopen work as `.unbound` project files.
 
 <p>
-  <img src="./feature3.png" width="450" alt="Recordly timeline editor screenshot">
+  <img src="./feature3.png" width="450" alt="Unbound timeline editor screenshot">
 </p>
 
 ## Extensions & Marketplace
 
-Recordly has a community-driven extension system. Anyone can build and publish extensions that add new capabilities to Recordly — cursor click sounds, device frames, browser mockups, wallpapers, render hooks, settings panels, and more.
+Unbound has a community-driven extension system. Anyone can build and publish extensions that add new capabilities to Unbound — cursor click sounds, device frames, browser mockups, wallpapers, render hooks, settings panels, and more.
 
-Browse and install community extensions from the [Recordly Marketplace](https://marketplace.recordly.dev/extensions).
+Browse and install community extensions from the [Unbound Marketplace](https://marketplace.unbound.dev/extensions).
 
 ---
 
@@ -77,7 +77,7 @@ Browse and install community extensions from the [Recordly Marketplace](https://
 - Jump directly from recording into the editor
 - Capture microphone audio and system audio
 - Use native capture backends where supported
-- Resume editing from saved `.recordly` project files
+- Resume editing from saved `.unbound` project files
 - Open existing recordings or existing project files from the app
 
 ### Timeline and Editing
@@ -151,15 +151,15 @@ Browse and install community extensions from the [Recordly Marketplace](https://
 # Screenshots
 
 <p align="center">
-  <img src="https://i.postimg.cc/CKxm8DRs/Screenshot-2026-03-20-at-7-07-22-pm.png" width="700" alt="Recordly editor screenshot">
+  <img src="https://i.postimg.cc/CKxm8DRs/Screenshot-2026-03-20-at-7-07-22-pm.png" width="700" alt="Unbound editor screenshot">
 </p>
 
 <p align="center">
-  <img src="https://i.postimg.cc/hjwdYRyV/Screenshot-2026-03-20-at-1-53-57-pm.png" width="700" alt="Recordly recording interface screenshot">
+  <img src="https://i.postimg.cc/hjwdYRyV/Screenshot-2026-03-20-at-1-53-57-pm.png" width="700" alt="Unbound recording interface screenshot">
 </p>
 
 <p align="center">
-  <img src="https://i.postimg.cc/Zn9VY6bg/Screenshot-2026-03-18-at-6-32-59-pm.png" width="700" alt="Recordly timeline screenshot">
+  <img src="https://i.postimg.cc/Zn9VY6bg/Screenshot-2026-03-18-at-6-32-59-pm.png" width="700" alt="Unbound timeline screenshot">
 </p>
 
 ---
@@ -170,19 +170,19 @@ Browse and install community extensions from the [Recordly Marketplace](https://
 
 Prebuilt releases are available at:
 
-https://github.com/webadderall/Recordly/releases
+https://github.com/webadderall/Unbound/releases
 
 ---
 
 ## Arch Linux / Manjaro (yay)
 
-Install from the AUR ([recordly-bin](https://aur.archlinux.org/packages/recordly-bin)):
+Install from the AUR ([unbound-bin](https://aur.archlinux.org/packages/unbound-bin)):
 
 ```bash
-yay -S recordly-bin
+yay -S unbound-bin
 ```
 
-PKGBUILD, desktop entry, release sync, and optional **local-from-source** packaging live in **[recordly-aur](https://github.com/firtoz/recordly-aur)** so this repository stays free of Arch release chores. For maintainer contact and how the package is updated, see that repo or the AUR package page.
+PKGBUILD, desktop entry, release sync, and optional **local-from-source** packaging live in **[unbound-aur](https://github.com/firtoz/unbound-aur)** so this repository stays free of Arch release chores. For maintainer contact and how the package is updated, see that repo or the AUR package page.
 
 ---
 
@@ -203,8 +203,8 @@ sudo apt install build-essential cmake libx11-dev libxtst-dev libxrandr-dev libx
 ### Steps
 
 ```bash
-git clone https://github.com/webadderall/Recordly.git recordly
-cd recordly
+git clone https://github.com/webadderall/Unbound.git unbound
+cd unbound
 npm install
 npm run dev
 ```
@@ -230,7 +230,7 @@ Locally built apps may be quarantined by macOS.
 Remove the quarantine flag with:
 
 ```bash
-xattr -rd com.apple.quarantine /Applications/Recordly.app
+xattr -rd com.apple.quarantine /Applications/Unbound.app
 ```
 
 ---
@@ -252,7 +252,7 @@ xattr -rd com.apple.quarantine /Applications/Recordly.app
 
 ## Record
 
-1. Launch Recordly.
+1. Launch Unbound.
 2. Select a screen or window.
 3. Choose microphone and system-audio options.
 4. Start recording.
@@ -269,7 +269,7 @@ Inside the editor you can:
 - add extra audio regions
 - crop the frame and choose an aspect ratio
 
-Save your work anytime as a `.recordly` project.
+Save your work anytime as a `.unbound` project.
 
 ## Export
 
@@ -286,7 +286,7 @@ You can adjust format-specific settings such as quality, GIF frame rate, GIF loo
 
 ### Cursor capture
 
-Recordly renders a polished cursor overlay on top of the recording. Platform cursor-hiding behavior still depends on OS support.
+Unbound renders a polished cursor overlay on top of the recording. Platform cursor-hiding behavior still depends on OS support.
 
 **macOS**
 - ScreenCaptureKit can exclude the real cursor cleanly.
@@ -316,7 +316,7 @@ System audio support varies by platform.
 
 # How It Works
 
-Recordly combines a platform-specific capture layer with a renderer-driven editor and export pipeline.
+Unbound combines a platform-specific capture layer with a renderer-driven editor and export pipeline.
 
 **Capture**
 - Electron coordinates recording and application flow
@@ -334,7 +334,7 @@ Recordly combines a platform-specific capture layer with a renderer-driven edito
 - The same scene logic used in preview is rendered into exported MP4 or GIF output
 
 **Projects**
-- `.recordly` files store the source media path plus editor state so work can be reopened later
+- `.unbound` files store the source media path plus editor state so work can be reopened later
 
 ---
 
@@ -360,7 +360,7 @@ See `CONTRIBUTING.md` for guidelines.
 
 Bug reports and feature requests:
 
-https://github.com/webadderall/Recordly/issues
+https://github.com/webadderall/Unbound/issues
 
 Pull requests are welcome.
 
@@ -384,7 +384,7 @@ Pull requests are welcome.
 
 # License
 
-Recordly is licensed under the **AGPL 3.0**.
+Unbound is licensed under the **AGPL 3.0**.
 
 ---
 
@@ -392,7 +392,7 @@ Recordly is licensed under the **AGPL 3.0**.
 
 ## Acknowledgements
 
-Recordly originally started as a fork of [OpenScreen](https://github.com/siddharthvaddem/openscreen) and has since diverged.
+Unbound originally started as a fork of [OpenScreen](https://github.com/siddharthvaddem/openscreen) and has since diverged.
 
 Created by  
 [@webadderall](https://x.com/webadderall)

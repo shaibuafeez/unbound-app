@@ -1,31 +1,31 @@
 import type { ChildProcessWithoutNullStreams } from "node:child_process";
+import { execFile } from "node:child_process";
 import { constants as fsConstants } from "node:fs";
 import fs from "node:fs/promises";
-import { execFile } from "node:child_process";
 import { promisify } from "node:util";
 import { BrowserWindow } from "electron";
 import { getFfmpegBinaryPath } from "../ffmpeg/binary";
 import {
-	getAudioSyncAdjustment,
 	appendSyncedAudioFilter,
-	normalizePauseSegments,
 	buildPausedAudioFilter,
+	getAudioSyncAdjustment,
+	normalizePauseSegments,
 } from "../ffmpeg/filters";
-import type { PauseSegment, AudioSyncAdjustment } from "../types";
+import { getWindowsCaptureExePath } from "../paths/binaries";
 import {
+	selectedSource,
 	setWindowsCaptureProcess,
+	setWindowsCaptureStopRequested,
+	setWindowsNativeCaptureActive,
 	windowsCaptureOutputBuffer,
+	windowsCaptureStopRequested,
 	windowsCaptureTargetPath,
 	windowsNativeCaptureActive,
-	setWindowsNativeCaptureActive,
-	windowsCaptureStopRequested,
-	setWindowsCaptureStopRequested,
-	selectedSource,
 } from "../state";
+import type { AudioSyncAdjustment, PauseSegment } from "../types";
 import { moveFileWithOverwrite } from "../utils";
 import { probeMediaDurationSeconds } from "./diagnostics";
 import { emitRecordingInterrupted } from "./events";
-import { getWindowsCaptureExePath } from "../paths/binaries";
 
 const execFileAsync = promisify(execFile);
 

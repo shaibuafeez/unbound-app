@@ -45,8 +45,8 @@ export default function App() {
 	useEffect(() => {
 		document.title =
 			windowType === "editor"
-				? t("app.editorTitle", "Recordly Editor")
-				: t("app.name", "Recordly");
+				? t("app.editorTitle", "Unbound Editor")
+				: t("app.name", "Unbound");
 	}, [windowType, t]);
 
 	switch (windowType) {
@@ -75,13 +75,13 @@ export default function App() {
 				<div className="flex h-full w-full items-center justify-center bg-editor-bg text-foreground">
 					<div className="flex items-center gap-4 rounded-2xl border border-foreground/10 bg-foreground/5 px-6 py-5 shadow-2xl shadow-black/30 backdrop-blur-xl">
 						<img
-							src="/app-icons/recordly-128.png"
-							alt={t("app.name", "Recordly")}
+							src="/app-icons/unbound-128.png"
+							alt={t("app.name", "Unbound")}
 							className="h-12 w-12 rounded-xl"
 						/>
 						<div>
 							<h1 className="text-xl font-semibold tracking-tight">
-								{t("app.name", "Recordly")}
+								{t("app.name", "Unbound")}
 							</h1>
 							<p className="text-sm text-foreground/65">
 								{t("app.subtitle", "Screen recording and editing")}

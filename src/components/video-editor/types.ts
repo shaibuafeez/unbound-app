@@ -62,11 +62,12 @@ export type EditorEffectSection =
 	| "zoom"
 	| "frame"
 	| "crop"
+	| "ai"
 	| "extensions"
 	| "clip"
 	| `ext:${string}`;
 
-export type ZoomTransitionEasing = "recordly" | "glide" | "smooth" | "snappy" | "linear";
+export type ZoomTransitionEasing = "unbound" | "glide" | "smooth" | "snappy" | "linear";
 
 export type WebcamCorner = "top-left" | "top-right" | "bottom-left" | "bottom-right";
 export type WebcamPositionPreset =
@@ -106,8 +107,8 @@ export const DEFAULT_ZOOM_IN_OVERLAP_MS = 500;
 export const DEFAULT_ZOOM_OUT_DURATION_MS = 1015.05;
 export const DEFAULT_CONNECTED_ZOOM_GAP_MS = 1500;
 export const DEFAULT_CONNECTED_ZOOM_DURATION_MS = 1000;
-export const DEFAULT_ZOOM_IN_EASING: ZoomTransitionEasing = "recordly";
-export const DEFAULT_ZOOM_OUT_EASING: ZoomTransitionEasing = "recordly";
+export const DEFAULT_ZOOM_IN_EASING: ZoomTransitionEasing = "unbound";
+export const DEFAULT_ZOOM_OUT_EASING: ZoomTransitionEasing = "unbound";
 export const DEFAULT_CONNECTED_ZOOM_EASING: ZoomTransitionEasing = "glide";
 export const DEFAULT_WEBCAM_SIZE = 40;
 export const DEFAULT_WEBCAM_REACT_TO_ZOOM = true;
@@ -294,7 +295,7 @@ export const DEFAULT_ANNOTATION_STYLE: AnnotationTextStyle = {
 
 export const DEFAULT_FIGURE_DATA: FigureData = {
 	arrowDirection: "right",
-	color: "#2563EB",
+	color: "#D4D0C8",
 	strokeWidth: 4,
 };
 
@@ -367,6 +368,42 @@ export const DEFAULT_AUTO_CAPTION_SETTINGS: AutoCaptionSettings = {
 	inactiveTextColor: "#A3A3A3",
 	backgroundOpacity: 0.9,
 };
+
+export interface CaptionTrack {
+	id: string;
+	language: string;
+	label: string;
+	cues: CaptionCue[];
+	isSource: boolean;
+}
+
+export const CAPTION_LANGUAGE_LABELS: Record<string, string> = {
+	auto: "Auto Detect",
+	en: "English",
+	es: "Spanish",
+	fr: "French",
+	de: "German",
+	it: "Italian",
+	pt: "Portuguese",
+	zh: "Chinese",
+	ja: "Japanese",
+	ko: "Korean",
+};
+
+export interface DubbedAudio {
+	audioData: ArrayBuffer;
+	refWavPath: string;
+	language: string;
+	label: string;
+	createdAt: number;
+}
+
+export interface LipSyncResult {
+	videoPath: string;
+	sourceVideoPath: string;
+	dubbedAudioLabel: string;
+	createdAt: number;
+}
 
 export type PlaybackSpeed = 0.25 | 0.5 | 0.75 | 1.25 | 1.5 | 1.75 | 2;
 

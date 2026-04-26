@@ -2,7 +2,7 @@
  * Extension Marketplace — Main Process
  *
  * Handles fetching, downloading, and installing extensions from the
- * Recordly marketplace API. Also provides admin review endpoints.
+ * Unbound marketplace API. Also provides admin review endpoints.
  */
 
 import { createWriteStream, existsSync } from "node:fs";
@@ -25,7 +25,7 @@ import type {
 // Configuration
 // ---------------------------------------------------------------------------
 
-const MARKETPLACE_API_BASE = "https://marketplace.recordly.dev/extensions/api/v1";
+const MARKETPLACE_API_BASE = "https://marketplace.unbound.dev/extensions/api/v1";
 const REQUEST_TIMEOUT_MS = 15_000;
 
 // ---------------------------------------------------------------------------
@@ -77,8 +77,8 @@ async function marketplaceFetch<T>(
 	try {
 		const headers: Record<string, string> = {
 			"Content-Type": "application/json",
-			"X-Recordly-Version": app.getVersion(),
-			"X-Recordly-Platform": process.platform,
+			"X-Unbound-Version": app.getVersion(),
+			"X-Unbound-Platform": process.platform,
 		};
 
 		// Attach admin key for privileged endpoints
@@ -168,8 +168,8 @@ export async function downloadAndInstallExtension(
 ): Promise<{ success: boolean; error?: string }> {
 	// Validate download URL against allowed marketplace origins
 	const allowedOrigins = [
-		"https://marketplace.recordly.dev",
-		"https://recordly.dev",
+		"https://marketplace.unbound.dev",
+		"https://unbound.dev",
 		...(app.isPackaged ? [] : ["http://localhost:3001"]),
 	];
 	try {
@@ -181,7 +181,7 @@ export async function downloadAndInstallExtension(
 		return { success: false, error: "Invalid download URL" };
 	}
 
-	const tempDir = path.join(app.getPath("temp"), `recordly-ext-${extensionId}-${Date.now()}`);
+	const tempDir = path.join(app.getPath("temp"), `unbound-ext-${extensionId}-${Date.now()}`);
 	const zipPath = path.join(tempDir, "extension.zip");
 
 	try {
@@ -197,7 +197,7 @@ export async function downloadAndInstallExtension(
 			response = await fetch(downloadUrl, {
 				signal: controller.signal,
 				headers: {
-					"X-Recordly-Version": app.getVersion(),
+					"X-Unbound-Version": app.getVersion(),
 				},
 			});
 		} finally {
@@ -265,14 +265,14 @@ export async function downloadAndInstallExtension(
 
 		// If there's a single directory, look inside it for the manifest.
 		const dirs = entries.filter((e) => e.isDirectory());
-		if (dirs.length === 1 && !existsSync(path.join(extractDir, "recordly-extension.json"))) {
+		if (dirs.length === 1 && !existsSync(path.join(extractDir, "unbound-extension.json"))) {
 			manifestDir = path.join(extractDir, dirs[0].name);
 		}
 
 		// Verify manifest exists
-		if (!existsSync(path.join(manifestDir, "recordly-extension.json"))) {
+		if (!existsSync(path.join(manifestDir, "unbound-extension.json"))) {
 			throw new Error(
-				"Downloaded extension does not contain a recordly-extension.json manifest",
+				"Downloaded extension does not contain a unbound-extension.json manifest",
 			);
 		}
 
@@ -285,7 +285,7 @@ export async function downloadAndInstallExtension(
 		// Track download count (fire-and-forget — CDN may cache the GET, so POST separately)
 		fetch(`${getMarketplaceUrl()}/extensions/${encodeURIComponent(extensionId)}/download`, {
 			method: "POST",
-			headers: { "X-Recordly-Version": app.getVersion() },
+			headers: { "X-Unbound-Version": app.getVersion() },
 		}).catch(() => undefined);
 
 		return { success: true };

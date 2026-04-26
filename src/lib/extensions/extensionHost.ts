@@ -18,14 +18,14 @@ import type {
 	ExtensionInfo,
 	ExtensionSettingsPanel,
 	FrameInstance,
-	RecordlyExtensionAPI,
-	RecordlyExtensionModule,
 	RenderHookContext,
 	RenderHookFn,
 	RenderHookPhase,
+	UnboundExtensionAPI,
+	UnboundExtensionModule,
 } from "./types";
 
-const EXTENSION_SETTINGS_STORAGE_KEY = "recordly.extension-settings.v1";
+const EXTENSION_SETTINGS_STORAGE_KEY = "unbound.extension-settings.v1";
 
 // ---------------------------------------------------------------------------
 // Security: Hide electronAPI from extension code
@@ -117,7 +117,7 @@ interface RegisteredCursorStyle {
 
 interface ActiveExtension {
 	info: ExtensionInfo;
-	module: RecordlyExtensionModule;
+	module: UnboundExtensionModule;
 	disposables: (() => void)[];
 }
 
@@ -191,14 +191,14 @@ export class ExtensionHost {
 		}
 
 		const disposables: (() => void)[] = [];
-		let mod: RecordlyExtensionModule | null = null;
+		let mod: UnboundExtensionModule | null = null;
 		try {
 			this.ensureExtensionSettingsLoaded(info.manifest.id);
 
 			// Block electronAPI access while extension code executes
 			_extensionActivationDepth++;
 			try {
-				const loaded: RecordlyExtensionModule = await import(/* @vite-ignore */ moduleUrl);
+				const loaded: UnboundExtensionModule = await import(/* @vite-ignore */ moduleUrl);
 				mod = loaded;
 				const api = this.createAPI(
 					info.manifest.id,
@@ -585,7 +585,7 @@ export class ExtensionHost {
 		extensionPath: string,
 		permissions: string[],
 		disposables: (() => void)[],
-	): RecordlyExtensionAPI {
+	): UnboundExtensionAPI {
 		const host = this;
 		const perms = new Set(permissions);
 

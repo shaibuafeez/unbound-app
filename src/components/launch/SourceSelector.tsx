@@ -153,13 +153,13 @@ export function SourceSelector() {
 					<TabsList className="grid grid-cols-2 mb-3 bg-zinc-900/40 rounded-full">
 						<TabsTrigger
 							value="screens"
-							className="data-[state=active]:bg-[#2563EB] data-[state=active]:text-white text-zinc-200 rounded-full text-xs py-1"
+							className="data-[state=active]:bg-[#D4D0C8] data-[state=active]:text-white text-zinc-200 rounded-full text-xs py-1"
 						>
 							{t("sourceSelector.screens")} ({screenSources.length})
 						</TabsTrigger>
 						<TabsTrigger
 							value="windows"
-							className="data-[state=active]:bg-[#2563EB] data-[state=active]:text-white text-zinc-200 rounded-full text-xs py-1"
+							className="data-[state=active]:bg-[#D4D0C8] data-[state=active]:text-white text-zinc-200 rounded-full text-xs py-1"
 						>
 							{t("sourceSelector.windows")} ({windowSources.length})
 						</TabsTrigger>
@@ -180,7 +180,7 @@ export function SourceSelector() {
 									return (
 										<Card
 											key={source.id}
-											className={`${styles.sourceCard} ${isSelected ? styles.selected : ""} cursor-pointer h-fit p-2 scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2563EB] focus-visible:ring-offset-2 focus-visible:ring-offset-transparent`}
+											className={`${styles.sourceCard} ${isSelected ? styles.selected : ""} cursor-pointer h-fit p-2 scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#D4D0C8] focus-visible:ring-offset-2 focus-visible:ring-offset-transparent`}
 											style={{ margin: 8, width: "90%", maxWidth: 220 }}
 											onClick={() => handleSourceSelect(source)}
 											onKeyDown={(event) =>
@@ -199,7 +199,7 @@ export function SourceSelector() {
 													/>
 													{isSelected && (
 														<div className="absolute -top-1 -right-1">
-															<div className="w-4 h-4 bg-[#2563EB] rounded-full flex items-center justify-center shadow-md">
+															<div className="w-4 h-4 bg-[#D4D0C8] rounded-full flex items-center justify-center shadow-md">
 																<MdCheck className={styles.icon} />
 															</div>
 														</div>
@@ -232,7 +232,7 @@ export function SourceSelector() {
 									return (
 										<Card
 											key={source.id}
-											className={`${styles.sourceCard} ${isSelected ? styles.selected : ""} cursor-pointer h-fit p-2 scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#2563EB] focus-visible:ring-offset-2 focus-visible:ring-offset-transparent`}
+											className={`${styles.sourceCard} ${isSelected ? styles.selected : ""} cursor-pointer h-fit p-2 scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#D4D0C8] focus-visible:ring-offset-2 focus-visible:ring-offset-transparent`}
 											style={{ margin: 8, width: "90%", maxWidth: 220 }}
 											onClick={() => handleSourceSelect(source)}
 											onKeyDown={(event) =>
@@ -311,7 +311,7 @@ export function SourceSelector() {
 					<Button
 						onClick={handleShare}
 						disabled={!selectedSource}
-						className="px-4 py-1 text-xs bg-[#2563EB] text-white hover:bg-[#2563EB]/80 disabled:opacity-50 disabled:bg-zinc-700"
+						className="px-4 py-1 text-xs bg-[#D4D0C8] text-[#0A0A0A] hover:bg-[#D4D0C8]/80 disabled:opacity-50 disabled:bg-zinc-700"
 					>
 						{t("sourceSelector.share")}
 					</Button>

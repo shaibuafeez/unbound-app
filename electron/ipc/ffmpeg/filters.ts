@@ -78,9 +78,7 @@ export function formatFfmpegSeconds(milliseconds: number): string {
 	return (milliseconds / 1000).toFixed(3);
 }
 
-export function normalizePauseSegments(
-	pauseSegments: PauseSegment[] | undefined,
-): PauseSegment[] {
+export function normalizePauseSegments(pauseSegments: PauseSegment[] | undefined): PauseSegment[] {
 	if (!Array.isArray(pauseSegments) || pauseSegments.length === 0) {
 		return [];
 	}

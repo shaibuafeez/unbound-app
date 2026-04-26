@@ -1,20 +1,20 @@
 import { execFile } from "node:child_process";
 import { promisify } from "node:util";
-import type { NativeMacWindowSource, WindowBounds, SelectedSource } from "../types";
-import {
-	selectedSource,
-	setSelectedWindowBounds,
-	interactionCaptureCleanup,
-	setInteractionCaptureCleanup,
-	windowBoundsCaptureInterval,
-	setWindowBoundsCaptureInterval,
-	cachedNativeMacWindowSources,
-	setCachedNativeMacWindowSources,
-	cachedNativeMacWindowSourcesAtMs,
-	setCachedNativeMacWindowSourcesAtMs,
-} from "../state";
-import { parseWindowId } from "../utils";
 import { ensureNativeWindowListBinary } from "../paths/binaries";
+import {
+	cachedNativeMacWindowSources,
+	cachedNativeMacWindowSourcesAtMs,
+	interactionCaptureCleanup,
+	selectedSource,
+	setCachedNativeMacWindowSources,
+	setCachedNativeMacWindowSourcesAtMs,
+	setInteractionCaptureCleanup,
+	setSelectedWindowBounds,
+	setWindowBoundsCaptureInterval,
+	windowBoundsCaptureInterval,
+} from "../state";
+import type { NativeMacWindowSource, SelectedSource, WindowBounds } from "../types";
+import { parseWindowId } from "../utils";
 
 const execFileAsync = promisify(execFile);
 
@@ -119,7 +119,9 @@ export function parseXwininfoBounds(stdout: string): WindowBounds | null {
 	};
 }
 
-export async function resolveLinuxWindowBounds(source: SelectedSource): Promise<WindowBounds | null> {
+export async function resolveLinuxWindowBounds(
+	source: SelectedSource,
+): Promise<WindowBounds | null> {
 	const windowId = parseWindowId(source?.id);
 
 	if (windowId) {
@@ -153,7 +155,9 @@ export async function resolveLinuxWindowBounds(source: SelectedSource): Promise<
 	}
 }
 
-export async function resolveWindowsWindowBounds(source: SelectedSource): Promise<WindowBounds | null> {
+export async function resolveWindowsWindowBounds(
+	source: SelectedSource,
+): Promise<WindowBounds | null> {
 	const windowId = parseWindowId(source?.id);
 	const windowTitle =
 		typeof source.windowTitle === "string" ? source.windowTitle.trim() : source.name.trim();
@@ -167,7 +171,7 @@ export async function resolveWindowsWindowBounds(source: SelectedSource): Promis
 		'Add-Type -TypeDefinition @"',
 		"using System;",
 		"using System.Runtime.InteropServices;",
-		"public static class RecordlyWindowBounds {",
+		"public static class UnboundWindowBounds {",
 		"  [StructLayout(LayoutKind.Sequential)]",
 		"  public struct RECT {",
 		"    public int Left;",
@@ -194,8 +198,8 @@ export async function resolveWindowsWindowBounds(source: SelectedSource): Promis
 		"if ($handle -le 0) {",
 		"  exit 1",
 		"}",
-		"$rect = New-Object RecordlyWindowBounds+RECT",
-		"if (-not [RecordlyWindowBounds]::GetWindowRect([IntPtr]$handle, [ref]$rect)) {",
+		"$rect = New-Object UnboundWindowBounds+RECT",
+		"if (-not [UnboundWindowBounds]::GetWindowRect([IntPtr]$handle, [ref]$rect)) {",
 		"  exit 1",
 		"}",
 		"@{ x = $rect.Left; y = $rect.Top; width = $rect.Right - $rect.Left; height = $rect.Bottom - $rect.Top } | ConvertTo-Json -Compress",
@@ -259,7 +263,9 @@ export function startWindowBoundsCapture() {
 	}
 
 	void refreshSelectedWindowBounds();
-	setWindowBoundsCaptureInterval(setInterval(() => {
-		void refreshSelectedWindowBounds();
-	}, 250));
+	setWindowBoundsCaptureInterval(
+		setInterval(() => {
+			void refreshSelectedWindowBounds();
+		}, 250),
+	);
 }

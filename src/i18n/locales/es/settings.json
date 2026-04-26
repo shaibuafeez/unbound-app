@@ -62,7 +62,7 @@
 		"connectedZoomDuration": "Duración entre zooms conectados",
 		"connectedZoomEasing": "Curva del paneo conectado",
 		"zoomEasingOptions": {
-			"recordly": "Recordly",
+			"unbound": "Unbound",
 			"glide": "Glide",
 			"smooth": "Suave",
 			"snappy": "Rápida",

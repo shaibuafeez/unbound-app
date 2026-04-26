@@ -4,10 +4,7 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import { promisify } from "node:util";
 import { app } from "electron";
-import {
-	nativeHelperMigrationPromise,
-	setNativeHelperMigrationPromise,
-} from "../state";
+import { nativeHelperMigrationPromise, setNativeHelperMigrationPromise } from "../state";
 
 const execFileAsync = promisify(execFile);
 
@@ -84,7 +81,7 @@ export function getBundledWhisperExecutableCandidates(): string[] {
 }
 
 export function getNativeCaptureHelperBinaryPath(): string {
-	return path.join(app.getPath("userData"), "native-tools", "recordly-screencapturekit-helper");
+	return path.join(app.getPath("userData"), "native-tools", "unbound-screencapturekit-helper");
 }
 
 export function getSystemCursorHelperSourcePath(): string {
@@ -92,7 +89,7 @@ export function getSystemCursorHelperSourcePath(): string {
 }
 
 export function getSystemCursorHelperBinaryPath(): string {
-	return path.join(app.getPath("userData"), "native-tools", "recordly-system-cursors");
+	return path.join(app.getPath("userData"), "native-tools", "unbound-system-cursors");
 }
 
 export function getNativeCursorMonitorSourcePath(): string {
@@ -100,7 +97,7 @@ export function getNativeCursorMonitorSourcePath(): string {
 }
 
 export function getNativeCursorMonitorBinaryPath(): string {
-	return path.join(app.getPath("userData"), "native-tools", "recordly-native-cursor-monitor");
+	return path.join(app.getPath("userData"), "native-tools", "unbound-native-cursor-monitor");
 }
 
 export function getNativeWindowListSourcePath(): string {
@@ -108,7 +105,7 @@ export function getNativeWindowListSourcePath(): string {
 }
 
 export function getNativeWindowListBinaryPath(): string {
-	return path.join(app.getPath("userData"), "native-tools", "recordly-window-list");
+	return path.join(app.getPath("userData"), "native-tools", "unbound-window-list");
 }
 
 export function getWindowsCaptureExePath(): string {
@@ -122,7 +119,11 @@ export function getCursorMonitorExePath(): string {
 async function migrateLegacyNativeHelperBinaries(): Promise<void> {
 	const legacyToCurrentPaths: Array<[string, string]> = [
 		[
-			path.join(app.getPath("userData"), "native-tools", "openscreen-screencapturekit-helper"),
+			path.join(
+				app.getPath("userData"),
+				"native-tools",
+				"openscreen-screencapturekit-helper",
+			),
 			getNativeCaptureHelperBinaryPath(),
 		],
 		[
@@ -228,7 +229,7 @@ export async function ensureNativeCaptureHelperBinary(): Promise<string> {
 		getNativeCaptureHelperSourcePath(),
 		getNativeCaptureHelperBinaryPath(),
 		"native ScreenCaptureKit helper",
-		"recordly-screencapturekit-helper",
+		"unbound-screencapturekit-helper",
 	);
 }
 
@@ -238,7 +239,7 @@ export async function ensureNativeWindowListBinary(): Promise<string> {
 		getNativeWindowListSourcePath(),
 		getNativeWindowListBinaryPath(),
 		"native ScreenCaptureKit window list helper",
-		"recordly-window-list",
+		"unbound-window-list",
 	);
 }
 
@@ -248,6 +249,6 @@ export async function ensureNativeCursorMonitorBinary(): Promise<string> {
 		getNativeCursorMonitorSourcePath(),
 		getNativeCursorMonitorBinaryPath(),
 		"native cursor monitor helper",
-		"recordly-native-cursor-monitor",
+		"unbound-native-cursor-monitor",
 	);
 }

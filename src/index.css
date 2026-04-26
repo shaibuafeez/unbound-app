@@ -1,3 +1,5 @@
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap");
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -9,7 +11,7 @@
 	}
 
 	*:focus-visible {
-		outline: 2px solid rgb(var(--brand-accent-rgb));
+		outline: 2px solid rgba(212, 208, 200, 0.4);
 		outline-offset: 2px;
 		-webkit-tap-highlight-color: transparent;
 	}
@@ -23,27 +25,27 @@
 	}
 
 	:root {
-		--brand-accent: #2563eb;
-		--brand-accent-rgb: 37, 99, 235;
+		--brand-accent: #d4d0c8;
+		--brand-accent-rgb: 212, 208, 200;
 		--background: 0 0% 100%;
 		--foreground: 20 14.3% 4.1%;
 		--card: 0 0% 100%;
 		--card-foreground: 20 14.3% 4.1%;
 		--popover: 0 0% 100%;
 		--popover-foreground: 20 14.3% 4.1%;
-		--primary: 221 83% 53%;
-		--primary-foreground: 210 40% 98%;
+		--primary: 40 10% 81%;
+		--primary-foreground: 0 0% 6%;
 		--secondary: 60 4.8% 95.9%;
 		--secondary-foreground: 24 9.8% 10%;
 		--muted: 60 4.8% 95.9%;
 		--muted-foreground: 25 5.3% 44.7%;
-		--accent: 214 100% 97%;
-		--accent-foreground: 221 83% 40%;
+		--accent: 40 5% 14%;
+		--accent-foreground: 40 12% 90%;
 		--destructive: 0 84.2% 60.2%;
 		--destructive-foreground: 60 9.1% 97.8%;
 		--border: 20 5.9% 90%;
 		--input: 20 5.9% 90%;
-		--ring: 221 83% 53%;
+		--ring: 40 10% 81%;
 		--chart-1: 12 76% 61%;
 		--chart-2: 173 58% 39%;
 		--chart-3: 197 37% 24%;
@@ -70,25 +72,25 @@
 		--slider-glow: 0 0% 0% / 0.35;
 	}
 	.dark {
-		--background: 20 14.3% 4.1%;
-		--foreground: 60 9.1% 97.8%;
-		--card: 20 14.3% 4.1%;
-		--card-foreground: 60 9.1% 97.8%;
-		--popover: 20 14.3% 4.1%;
-		--popover-foreground: 60 9.1% 97.8%;
-		--primary: 221 83% 53%;
-		--primary-foreground: 210 40% 98%;
-		--secondary: 12 6.5% 15.1%;
-		--secondary-foreground: 60 9.1% 97.8%;
-		--muted: 12 6.5% 15.1%;
-		--muted-foreground: 24 5.4% 63.9%;
-		--accent: 217 33% 17%;
-		--accent-foreground: 210 40% 98%;
+		--background: 0 0% 4%;
+		--foreground: 0 0% 93%;
+		--card: 0 0% 4%;
+		--card-foreground: 0 0% 93%;
+		--popover: 0 0% 4%;
+		--popover-foreground: 0 0% 93%;
+		--primary: 40 10% 81%;
+		--primary-foreground: 0 0% 6%;
+		--secondary: 0 0% 11%;
+		--secondary-foreground: 0 0% 93%;
+		--muted: 0 0% 11%;
+		--muted-foreground: 0 0% 40%;
+		--accent: 40 5% 14%;
+		--accent-foreground: 40 12% 90%;
 		--destructive: 0 62.8% 30.6%;
-		--destructive-foreground: 60 9.1% 97.8%;
-		--border: 12 6.5% 15.1%;
-		--input: 12 6.5% 15.1%;
-		--ring: 221 83% 53%;
+		--destructive-foreground: 0 0% 93%;
+		--border: 0 0% 11%;
+		--input: 0 0% 11%;
+		--ring: 40 10% 81%;
 		--chart-1: 220 70% 50%;
 		--chart-2: 160 60% 45%;
 		--chart-3: 30 80% 55%;
@@ -96,22 +98,22 @@
 		--chart-5: 340 75% 55%;
 
 		/* Editor surface colors — dark mode */
-		--editor-bg: 240 6% 7%;
-		--editor-header: 240 5% 8.5%;
-		--editor-panel: 240 5% 9%;
-		--editor-surface: 240 4% 10%;
-		--editor-surface-alt: 240 5% 11%;
-		--editor-dialog: 240 10% 3%;
-		--editor-dialog-alt: 237 9% 5%;
-		--editor-timeline: 240 6% 7%;
-		--editor-row: 240 4% 10%;
-		--editor-subrow: 240 7% 15%;
+		--editor-bg: 0 0% 4%;
+		--editor-header: 0 0% 6.5%;
+		--editor-panel: 0 0% 9%;
+		--editor-surface: 0 0% 11%;
+		--editor-surface-alt: 0 0% 13.5%;
+		--editor-dialog: 0 0% 4%;
+		--editor-dialog-alt: 0 0% 6%;
+		--editor-timeline: 0 0% 4%;
+		--editor-row: 0 0% 11%;
+		--editor-subrow: 0 0% 14%;
 
 		/* Slider track colors — dark mode */
-		--slider-track: 0 0% 100% / 0.12;
-		--slider-thumb: 0 0% 100%;
+		--slider-track: 0 0% 100% / 0.08;
+		--slider-thumb: 0 0% 93%;
 		--slider-thumb-shadow: 0 0% 100% / 0.32;
-		--slider-glow: 0 0% 100% / 0.5;
+		--slider-glow: 212 208 200 / 0.15;
 	}
 }
 
@@ -124,7 +126,7 @@
 
 		-webkit-user-select: none;
 		user-select: none;
-		font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+		font-family: "Inter", -apple-system, BlinkMacSystemFont, sans-serif;
 	}
 
 	button,
@@ -135,12 +137,12 @@
 	}
 
 	[data-platform="macos"] body {
-		font-family: "SF Pro Display", "SF Pro Text", -apple-system, BlinkMacSystemFont, sans-serif;
+		font-family: "Inter", "SF Pro Display", -apple-system, BlinkMacSystemFont, sans-serif;
 	}
 
 	[data-platform="macos"] body .font-mono,
 	[data-platform="macos"] body kbd {
-		font-family: "SF Pro Text", "SF Pro Display", -apple-system, BlinkMacSystemFont, sans-serif;
+		font-family: "JetBrains Mono", "SF Mono", Consolas, monospace;
 	}
 }
 
@@ -168,11 +170,11 @@
 		border-radius: inherit;
 		background: linear-gradient(
 			90deg,
-			rgba(37, 99, 235, 0) 0%,
-			rgba(37, 99, 235, 0.35) 18%,
-			rgba(96, 165, 250, 0.92) 52%,
-			rgba(37, 99, 235, 0.3) 82%,
-			rgba(37, 99, 235, 0) 100%
+			rgba(212, 208, 200, 0) 0%,
+			rgba(212, 208, 200, 0.35) 18%,
+			rgba(212, 208, 200, 0.92) 52%,
+			rgba(212, 208, 200, 0.3) 82%,
+			rgba(212, 208, 200, 0) 100%
 		);
 		animation: indeterminate-progress 1.15s cubic-bezier(0.4, 0, 0.2, 1) infinite;
 	}
@@ -187,6 +189,11 @@
 		display: none; /* Chrome, Safari, Opera */
 	}
 
+	/* Ensure Radix popover/select dropdowns render above all editor layers */
+	[data-radix-popper-content-wrapper] {
+		z-index: 9999 !important;
+	}
+
 	/* Smooth playback scrubber */
 	input[type="range"] {
 		-webkit-appearance: none;
@@ -195,34 +202,35 @@
 
 	input[type="range"]::-webkit-slider-runnable-track {
 		border-radius: 100px;
-		height: 4px;
-		background: hsl(var(--slider-track));
+		height: 3px;
+		background: rgba(255, 255, 255, 0.08);
 	}
 
 	input[type="range"]::-moz-range-track {
 		border-radius: 100px;
-		height: 4px;
-		background: hsl(var(--slider-track));
+		height: 3px;
+		background: rgba(255, 255, 255, 0.08);
 	}
 
 	input[type="range"]::-webkit-slider-thumb {
 		-webkit-appearance: none;
 		appearance: none;
-		width: 16px;
-		height: 16px;
+		width: 10px;
+		height: 10px;
 		border-radius: 50%;
-		background: hsl(var(--slider-thumb));
+		background: #ededed;
 		cursor: pointer;
 		box-shadow: 0 2px 8px hsl(var(--slider-thumb-shadow));
-		border: 2px solid hsl(var(--slider-thumb));
+		border: none;
 		transition: all 0.08s ease-out;
+		margin-top: -3.5px;
 	}
 
 	input[type="range"]::-webkit-slider-thumb:hover {
-		background: hsl(var(--slider-thumb));
+		background: #ededed;
 		transform: scale(1.15);
-		box-shadow: 0 3px 10px hsl(var(--slider-glow));
-		border-color: var(--brand-accent);
+		box-shadow: 0 0 10px rgba(212, 208, 200, 0.15);
+		border-color: #d4d0c8;
 	}
 
 	input[type="range"]::-webkit-slider-thumb:active {
@@ -230,21 +238,21 @@
 	}
 
 	input[type="range"]::-moz-range-thumb {
-		width: 16px;
-		height: 16px;
+		width: 10px;
+		height: 10px;
 		border-radius: 50%;
-		background: hsl(var(--slider-thumb));
+		background: #ededed;
 		cursor: pointer;
-		border: 2px solid hsl(var(--slider-thumb));
+		border: none;
 		box-shadow: 0 2px 8px hsl(var(--slider-thumb-shadow));
 		transition: all 0.08s ease-out;
 	}
 
 	input[type="range"]::-moz-range-thumb:hover {
-		background: hsl(var(--slider-thumb));
+		background: #ededed;
 		transform: scale(1.15);
-		box-shadow: 0 3px 10px hsl(var(--slider-glow));
-		border-color: var(--brand-accent);
+		box-shadow: 0 0 10px rgba(212, 208, 200, 0.15);
+		border-color: #d4d0c8;
 	}
 
 	input[type="range"]::-moz-range-thumb:active {

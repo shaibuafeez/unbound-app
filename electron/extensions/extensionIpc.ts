@@ -6,6 +6,7 @@
  */
 
 import { BrowserWindow, dialog, ipcMain, shell } from "electron";
+import { getErrorMessage } from "./errorUtils";
 import {
 	discoverExtensions,
 	getExtension,
@@ -23,7 +24,6 @@ import {
 	submitExtensionForReview,
 	updateReviewStatus,
 } from "./extensionMarketplace";
-import { getErrorMessage } from "./errorUtils";
 import type { ExtensionInfo, MarketplaceReviewStatus } from "./extensionTypes";
 
 /**
@@ -77,7 +77,7 @@ export function registerExtensionIpcHandlers(): void {
 		const result = await dialog.showOpenDialog(window!, {
 			title: "Select Extension Folder",
 			properties: ["openDirectory"],
-			message: "Select a folder containing a recordly-extension.json manifest",
+			message: "Select a folder containing a unbound-extension.json manifest",
 		});
 
 		if (result.canceled || result.filePaths.length === 0) {
@@ -88,7 +88,7 @@ export function registerExtensionIpcHandlers(): void {
 		if (!info) {
 			return {
 				success: false,
-				reason: "Invalid extension: missing or invalid recordly-extension.json",
+				reason: "Invalid extension: missing or invalid unbound-extension.json",
 			};
 		}
 

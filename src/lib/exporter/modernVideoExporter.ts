@@ -80,6 +80,7 @@ interface VideoExporterConfig extends ExportConfig {
 	frame?: string | null;
 	audioRegions?: AudioRegion[];
 	sourceAudioFallbackPaths?: string[];
+	preferSourceAudioFallback?: boolean;
 	previewWidth?: number;
 	previewHeight?: number;
 	onProgress?: (progress: ExportProgress) => void;
@@ -161,7 +162,7 @@ export class ModernVideoExporter {
 			this.cleanup();
 			this.cancelled = false;
 			this.encoderError = null;
-                        this.nativeEncoderError = null;
+			this.nativeEncoderError = null;
 			const backendPreference = this.config.backendPreference ?? "auto";
 			let useNativeEncoder = false;
 			this.lastNativeExportError = null;
@@ -256,9 +257,9 @@ export class ModernVideoExporter {
 			this.metadataLoadTimeMs = this.getNowMs() - stageStartedAt;
 			const nativeAudioPlan = this.buildNativeAudioPlan(videoInfo);
 			const shouldUseFfmpegAudioFallback =
-				!useNativeEncoder
-				&& nativeAudioPlan.audioMode !== "none"
-				&& !(await isAacAudioEncodingSupported());
+				!useNativeEncoder &&
+				nativeAudioPlan.audioMode !== "none" &&
+				!(await isAacAudioEncodingSupported());
 			const effectiveDuration = this.streamingDecoder.getEffectiveDuration(
 				this.config.trimRegions,
 				this.config.speedRegions,
@@ -439,7 +440,11 @@ export class ModernVideoExporter {
 				throw this.encoderError;
 			}
 
-			if (nativeAudioPlan.audioMode !== "none" && !shouldUseFfmpegAudioFallback && !this.cancelled) {
+			if (
+				nativeAudioPlan.audioMode !== "none" &&
+				!shouldUseFfmpegAudioFallback &&
+				!this.cancelled
+			) {
 				const demuxer = this.streamingDecoder.getDemuxer();
 				if (
 					demuxer ||
@@ -718,7 +723,10 @@ export class ModernVideoExporter {
 			(audioPath) => typeof audioPath === "string" && audioPath.trim().length > 0,
 		);
 		const localVideoSourcePath = this.getNativeVideoSourcePath();
+		const preferSourceAudioFallback =
+			this.config.preferSourceAudioFallback === true && sourceAudioFallbackPaths.length > 0;
 		const primaryAudioSourcePath =
+			(preferSourceAudioFallback ? sourceAudioFallbackPaths[0] : null) ??
 			(videoInfo.hasAudio ? localVideoSourcePath : null) ??
 			sourceAudioFallbackPaths[0] ??
 			null;
@@ -782,7 +790,10 @@ export class ModernVideoExporter {
 			return false;
 		}
 
-		if (typeof VideoEncoder === "undefined" || typeof VideoEncoder.isConfigSupported !== "function") {
+		if (
+			typeof VideoEncoder === "undefined" ||
+			typeof VideoEncoder.isConfigSupported !== "function"
+		) {
 			this.lastNativeExportError = `${NATIVE_EXPORT_ENGINE_NAME} export requires WebCodecs VideoEncoder support.`;
 			return false;
 		}
@@ -804,8 +815,7 @@ export class ModernVideoExporter {
 				return false;
 			}
 		} catch (error) {
-			this.lastNativeExportError =
-				error instanceof Error ? error.message : String(error);
+			this.lastNativeExportError = error instanceof Error ? error.message : String(error);
 			console.warn(
 				`[VideoExporter] ${NATIVE_EXPORT_ENGINE_NAME} encoder support check failed`,
 				error,
@@ -852,7 +862,8 @@ export class ModernVideoExporter {
 					.then((writeResult) => {
 						if (!writeResult.success && !this.cancelled) {
 							throw new Error(
-								writeResult.error || "Failed to write H.264 chunk to native encoder",
+								writeResult.error ||
+									"Failed to write H.264 chunk to native encoder",
 							);
 						}
 					})
@@ -880,8 +891,7 @@ export class ModernVideoExporter {
 		try {
 			encoder.configure(encoderConfig);
 		} catch (error) {
-			this.lastNativeExportError =
-				error instanceof Error ? error.message : String(error);
+			this.lastNativeExportError = error instanceof Error ? error.message : String(error);
 			try {
 				encoder.close();
 			} catch (closeError) {
@@ -923,8 +933,7 @@ export class ModernVideoExporter {
 			if (this.nativeEncoderError) throw this.nativeEncoderError;
 		}
 		while (
-			this.nativeH264Encoder.encodeQueueSize >=
-			ModernVideoExporter.NATIVE_ENCODER_QUEUE_LIMIT
+			this.nativeH264Encoder.encodeQueueSize >= ModernVideoExporter.NATIVE_ENCODER_QUEUE_LIMIT
 		) {
 			await new Promise<void>((r) => setTimeout(r, 2));
 			if (this.cancelled) return;
@@ -1055,7 +1064,8 @@ export class ModernVideoExporter {
 					audioPlan.audioMode === "copy-source" || audioPlan.audioMode === "trim-source"
 						? audioPlan.audioSourcePath
 						: null,
-				trimSegments: audioPlan.audioMode === "trim-source" ? audioPlan.trimSegments : undefined,
+				trimSegments:
+					audioPlan.audioMode === "trim-source" ? audioPlan.trimSegments : undefined,
 				editedAudioData: editedAudioBuffer,
 				editedAudioMimeType,
 			}),
@@ -1404,7 +1414,8 @@ export class ModernVideoExporter {
 						}
 					} catch (error) {
 						console.error("Muxing error:", error);
-						const muxingError = error instanceof Error ? error : new Error(String(error));
+						const muxingError =
+							error instanceof Error ? error : new Error(String(error));
 						if (!this.encoderError) {
 							this.encoderError = muxingError;
 						}

@@ -1,15 +1,15 @@
 {
-	"name": "recordly",
-	"productName": "Recordly",
+	"name": "unbound",
+	"productName": "Unbound",
 	"description": "A free, creator-focused screen recorder with auto-zoom, cursor effects, backgrounds, annotations, and more - built for polished videos out of the box.",
 	"author": "webadderall",
-	"homepage": "https://github.com/webadderall/Recordly",
+	"homepage": "https://github.com/webadderall/Unbound",
 	"repository": {
 		"type": "git",
-		"url": "https://github.com/webadderall/Recordly.git"
+		"url": "https://github.com/webadderall/Unbound.git"
 	},
 	"bugs": {
-		"url": "https://github.com/webadderall/Recordly/issues"
+		"url": "https://github.com/webadderall/Unbound/issues"
 	},
 	"private": true,
 	"version": "1.1.24",
@@ -37,9 +37,11 @@
 		"test:watch": "vitest"
 	},
 	"dependencies": {
+		"@0glabs/0g-serving-broker": "^0.7.5",
 		"@phosphor-icons/react": "^2.1.10",
 		"capturekit": "^1.0.13",
 		"electron-updater": "^6.8.3",
+		"ethers": "^6.16.0",
 		"ffmpeg-static": "^5.3.0",
 		"uiohook-napi": "^1.5.4"
 	},

@@ -1,15 +1,15 @@
-import { createRequire } from "node:module";
 import fs from "node:fs/promises";
+import { createRequire } from "node:module";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { app } from "electron";
 import { RECORDINGS_DIR } from "../appPaths";
-import { RECORDINGS_SETTINGS_FILE, AUTO_RECORDING_PREFIX } from "./constants";
+import { AUTO_RECORDING_PREFIX, RECORDINGS_SETTINGS_FILE } from "./constants";
 import {
 	approvedLocalReadPaths,
 	customRecordingsDir,
-	setCustomRecordingsDir,
 	recordingsDirLoaded,
+	setCustomRecordingsDir,
 	setRecordingsDirLoaded,
 } from "./state";
 
@@ -43,6 +43,19 @@ export function normalizeVideoSourcePath(videoPath?: string | null): string | nu
 			return fileURLToPath(trimmed);
 		} catch {
 			// Fall through and keep best-effort string path below.
+		}
+	}
+
+	// Handle media server URLs like http://127.0.0.1:PORT/video?path=...
+	if (/^https?:\/\//i.test(trimmed)) {
+		try {
+			const parsed = new URL(trimmed);
+			const filePath = parsed.searchParams.get("path");
+			if (filePath) {
+				return filePath;
+			}
+		} catch {
+			// Fall through
 		}
 	}
 
@@ -121,4 +134,3 @@ export function approveUserPath(filePath: string | null | undefined): void {
 		// Ignore invalid paths; later reads will surface the underlying error.
 	}
 }
-

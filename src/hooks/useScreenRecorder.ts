@@ -240,8 +240,8 @@ export function useScreenRecorder(): UseScreenRecorderReturn {
 			await window.electronAPI.openScreenRecordingPreferences();
 			alert(
 				options.startup
-					? "Recordly needs Screen Recording permission before you start. System Settings has been opened. After enabling it, quit and reopen Recordly."
-					: "Screen Recording permission is still missing. System Settings has been opened again. Enable it, then quit and reopen Recordly before recording.",
+					? "Unbound needs Screen Recording permission before you start. System Settings has been opened. After enabling it, quit and reopen Unbound."
+					: "Screen Recording permission is still missing. System Settings has been opened again. Enable it, then quit and reopen Unbound before recording.",
 			);
 			return false;
 		}
@@ -263,8 +263,8 @@ export function useScreenRecorder(): UseScreenRecorderReturn {
 		await window.electronAPI.openAccessibilityPreferences();
 		alert(
 			options.startup
-				? "Recordly also needs Accessibility permission for cursor tracking. System Settings has been opened. After enabling it, quit and reopen Recordly."
-				: "Accessibility permission is still missing. System Settings has been opened again. Enable it, then quit and reopen Recordly before recording.",
+				? "Unbound also needs Accessibility permission for cursor tracking. System Settings has been opened. After enabling it, quit and reopen Unbound."
+				: "Accessibility permission is still missing. System Settings has been opened again. Enable it, then quit and reopen Unbound before recording.",
 		);
 
 		return false;
@@ -435,7 +435,10 @@ export function useScreenRecorder(): UseScreenRecorderReturn {
 	}, []);
 
 	const storeMicrophoneSidecar = useCallback(
-		async (micFallbackBlobPromise: Promise<Blob | null> | null | undefined, finalPath: string) => {
+		async (
+			micFallbackBlobPromise: Promise<Blob | null> | null | undefined,
+			finalPath: string,
+		) => {
 			const micFallbackBlob = await micFallbackBlobPromise;
 			if (!micFallbackBlob) {
 				return;
@@ -649,9 +652,8 @@ export function useScreenRecorder(): UseScreenRecorderReturn {
 					);
 					void logNativeCaptureDiagnostics("stop-native-screen-recording");
 					try {
-						const recoveredPath = await recoverNativeRecordingSession(
-							micFallbackBlobPromise,
-						);
+						const recoveredPath =
+							await recoverNativeRecordingSession(micFallbackBlobPromise);
 						if (recoveredPath) {
 							return;
 						}

@@ -2252,7 +2252,7 @@ const VideoPlayback = forwardRef<VideoPlaybackRef, VideoPlaybackProps>(
 					>
 						<div
 							ref={focusIndicatorRef}
-							className="absolute rounded-md border border-[#2563EB]/80 bg-[#2563EB]/20 shadow-[0_0_0_1px_rgba(37,99,235,0.35)]"
+							className="absolute rounded-md border border-[#D4D0C8]/80 bg-[#D4D0C8]/20 shadow-[0_0_0_1px_rgba(212,208,200,0.35)]"
 							style={{ display: "none", pointerEvents: "none" }}
 						/>
 						{webcam && webcamVideoPath ? (

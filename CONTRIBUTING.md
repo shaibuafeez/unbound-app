@@ -17,7 +17,7 @@ Areas where help is especially valuable:
 2. **Clone Your Fork**
    - Clone your forked repository to your local machine:
      ```bash
-   git clone https://github.com/your-username/Recordly.git
+   git clone https://github.com/your-username/Unbound.git
      ```
 
 3. **Create a New Branch**
@@ -50,7 +50,7 @@ Areas where help is especially valuable:
 
 ## Reporting Issues
 
-If you encounter a bug or have a feature request, please open an issue in the [Issues](https://github.com/webadderall/Recordly/issues) section of this repository. Provide as much detail as possible to help us address the issue effectively.
+If you encounter a bug or have a feature request, please open an issue in the [Issues](https://github.com/webadderall/Unbound/issues) section of this repository. Provide as much detail as possible to help us address the issue effectively.
 
 ## Style Guide
 

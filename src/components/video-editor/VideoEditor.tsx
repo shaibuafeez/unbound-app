@@ -2,25 +2,26 @@ import {
 	Check,
 	CaretDown as ChevronDown,
 	CaretUp as ChevronUp,
-	ClosedCaptioning,
 	Crop,
-	Cursor,
+	CursorClick,
 	DownloadSimple as Download,
 	FolderOpen,
-	Gear,
+	FrameCorners,
 	Pause,
-	Camera as PhCameraRegular,
 	Play,
 	Plus,
 	PuzzlePiece,
 	ArrowClockwise as Redo2,
+	Robot,
 	FloppyDisk as Save,
 	Scissors,
 	SkipBack,
 	SkipForward,
-	Sparkle,
+	SlidersHorizontal,
+	Subtitles,
 	ArrowCounterClockwise as Undo2,
 	UserCircle as User,
+	VideoCamera,
 	SpeakerLow as Volume1,
 	SpeakerHigh as Volume2,
 	SpeakerX as VolumeX,
@@ -29,7 +30,7 @@ import {
 	MagnifyingGlassPlus as ZoomIn,
 } from "@phosphor-icons/react";
 import type { Span } from "dnd-timeline";
-import { motion } from "motion/react";
+import { AnimatePresence, motion } from "motion/react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -78,23 +79,31 @@ import {
 } from "@/utils/aspectRatioUtils";
 import { ExtensionIcon } from "./ExtensionIcon";
 
-const PhCursorFill = (props: { className?: string; weight?: "fill" | "regular" }) => (
-	<Cursor weight="fill" className={props.className} />
+type RailIconWeight = "thin" | "light" | "regular" | "bold" | "fill" | "duotone";
+
+const PhScene = (props: { className?: string; weight?: RailIconWeight }) => (
+	<FrameCorners weight={props.weight ?? "regular"} className={props.className} />
 );
-const PhCamera = (props: { className?: string; weight?: "fill" | "regular" }) => (
-	<PhCameraRegular weight={props.weight ?? "regular"} className={props.className} />
+const PhCursorFill = (props: { className?: string; weight?: RailIconWeight }) => (
+	<CursorClick weight={props.weight ?? "regular"} className={props.className} />
 );
-const PhCaptions = (props: { className?: string; weight?: "fill" | "regular" }) => (
-	<ClosedCaptioning weight={props.weight ?? "regular"} className={props.className} />
+const PhCamera = (props: { className?: string; weight?: RailIconWeight }) => (
+	<VideoCamera weight={props.weight ?? "regular"} className={props.className} />
 );
-const PhPuzzle = (props: { className?: string; weight?: "fill" | "regular" }) => (
+const PhCaptions = (props: { className?: string; weight?: RailIconWeight }) => (
+	<Subtitles weight={props.weight ?? "regular"} className={props.className} />
+);
+const PhPuzzle = (props: { className?: string; weight?: RailIconWeight }) => (
 	<PuzzlePiece weight={props.weight ?? "regular"} className={props.className} />
 );
-const PhSparkle = (props: { className?: string; weight?: "fill" | "regular" }) => (
-	<Sparkle weight={props.weight ?? "regular"} className={props.className} />
+const PhSettings = (props: { className?: string; weight?: RailIconWeight }) => (
+	<SlidersHorizontal weight={props.weight ?? "regular"} className={props.className} />
 );
-const PhSettings = (props: { className?: string; weight?: "fill" | "regular" }) => (
-	<Gear weight={props.weight ?? "regular"} className={props.className} />
+const PhRobot = (props: { className?: string; weight?: RailIconWeight }) => (
+	<Robot weight={props.weight ?? "regular"} className={props.className} />
+);
+const PhAccount = (props: { className?: string; weight?: RailIconWeight }) => (
+	<User weight={props.weight ?? "regular"} className={props.className} />
 );
 
 import { extensionHost } from "@/lib/extensions";
@@ -128,7 +137,9 @@ import {
 	type AnnotationRegion,
 	type AudioRegion,
 	type AutoCaptionSettings,
+	CAPTION_LANGUAGE_LABELS,
 	type CaptionCue,
+	type CaptionTrack,
 	type ClipRegion,
 	type CropRegion,
 	type CursorStyle,
@@ -154,6 +165,7 @@ import {
 	DEFAULT_ZOOM_IN_OVERLAP_MS,
 	DEFAULT_ZOOM_OUT_DURATION_MS,
 	DEFAULT_ZOOM_OUT_EASING,
+	type DubbedAudio,
 	type EditorEffectSection,
 	type FigureData,
 	getClipSourceEndMs,
@@ -179,7 +191,8 @@ type EditorHistorySnapshot = {
 	speedRegions: SpeedRegion[];
 	annotationRegions: AnnotationRegion[];
 	audioRegions: AudioRegion[];
-	autoCaptions: CaptionCue[];
+	captionTracks: CaptionTrack[];
+	activeCaptionTrackId: string | null;
 	selectedZoomId: string | null;
 	selectedTrimId: string | null;
 	selectedClipId: string | null;
@@ -213,6 +226,111 @@ type SmokeExportConfig = {
 	maxDecodeQueue?: number;
 	maxPendingFrames?: number;
 };
+
+function EditorRailButton({
+	label,
+	isActive,
+	onClick,
+	title,
+	icon,
+}: {
+	label: string;
+	isActive: boolean;
+	onClick: () => void;
+	title: string;
+	icon: ((props: { className?: string; weight?: RailIconWeight }) => JSX.Element) | string;
+}) {
+	const [isHovered, setIsHovered] = useState(false);
+
+	return (
+		<div className="relative flex items-center">
+			<motion.button
+				type="button"
+				onClick={onClick}
+				title={title}
+				aria-label={label}
+				aria-current={isActive ? "page" : undefined}
+				onHoverStart={() => setIsHovered(true)}
+				onHoverEnd={() => setIsHovered(false)}
+				onFocus={() => setIsHovered(true)}
+				onBlur={() => setIsHovered(false)}
+				className="group relative flex h-10 w-10 items-center justify-center overflow-visible rounded-[14px] outline-none focus:outline-none focus-visible:outline-none"
+				animate={{
+					opacity: isActive ? 1 : isHovered ? 0.98 : 0.62,
+					scale: isActive ? 1 : isHovered ? 1 : 0.98,
+				}}
+				whileHover={{ x: 2 }}
+				whileTap={{ scale: 0.96 }}
+				transition={{ duration: 0.18, ease: "easeOut" }}
+			>
+				<motion.span
+					className="absolute inset-0 rounded-[14px] border"
+					animate={{
+						backgroundColor: isActive
+							? "rgba(255,255,255,0.07)"
+							: isHovered
+								? "rgba(255,255,255,0.045)"
+								: "rgba(255,255,255,0.015)",
+						borderColor: isActive
+							? "rgba(212,208,200,0.18)"
+							: isHovered
+								? "rgba(255,255,255,0.08)"
+								: "rgba(255,255,255,0)",
+						boxShadow: isActive
+							? "0 10px 26px rgba(0,0,0,0.16), inset 0 1px 0 rgba(255,255,255,0.05)"
+							: isHovered
+								? "0 8px 20px rgba(0,0,0,0.1), inset 0 1px 0 rgba(255,255,255,0.04)"
+								: "0 0 0 rgba(0,0,0,0)",
+					}}
+					transition={{ duration: 0.18, ease: "easeOut" }}
+				/>
+				{isActive && (
+					<motion.span
+						layoutId="rail-active-bar"
+						className="absolute -left-[5px] top-1/2 h-5 w-[3px] -translate-y-1/2 rounded-full bg-[#D4D0C8]"
+						transition={{ type: "spring", stiffness: 500, damping: 34 }}
+						style={{ boxShadow: "0 0 14px rgba(212, 208, 200, 0.4)" }}
+					/>
+				)}
+				<motion.span
+					className="relative z-10"
+					animate={{
+						color: isActive
+							? "#f4f1ea"
+							: isHovered
+								? "rgba(255,255,255,0.95)"
+								: "hsl(var(--foreground))",
+						y: isActive ? -0.5 : 0,
+					}}
+					transition={{ duration: 0.18, ease: "easeOut" }}
+				>
+					{typeof icon === "string" ? (
+						<ExtensionIcon icon={icon} className="h-[23px] w-[23px]" />
+					) : (
+						icon({
+							className: "h-[23px] w-[23px]",
+							weight: isActive ? "fill" : isHovered ? "duotone" : "regular",
+						})
+					)}
+				</motion.span>
+			</motion.button>
+
+			<AnimatePresence>
+				{isHovered && (
+					<motion.div
+						initial={{ opacity: 0, x: -6, scale: 0.98 }}
+						animate={{ opacity: 1, x: 0, scale: 1 }}
+						exit={{ opacity: 0, x: -6, scale: 0.98 }}
+						transition={{ duration: 0.16, ease: "easeOut" }}
+						className="pointer-events-none absolute left-full top-1/2 z-30 ml-3 -translate-y-1/2 whitespace-nowrap rounded-full border border-foreground/[0.08] bg-editor-panel px-3 py-1.5 text-[11px] font-medium text-foreground shadow-[0_12px_30px_rgba(0,0,0,0.16)]"
+					>
+						{label}
+					</motion.div>
+				)}
+			</AnimatePresence>
+		</div>
+	);
+}
 
 async function writeSmokeExportReport(
 	outputPath: string | null,
@@ -566,7 +684,39 @@ export default function VideoEditor() {
 	const [selectedAnnotationId, setSelectedAnnotationId] = useState<string | null>(null);
 	const [audioRegions, setAudioRegions] = useState<AudioRegion[]>([]);
 	const [selectedAudioId, setSelectedAudioId] = useState<string | null>(null);
-	const [autoCaptions, setAutoCaptions] = useState<CaptionCue[]>([]);
+	const [captionTracks, setCaptionTracks] = useState<CaptionTrack[]>([]);
+	const [activeCaptionTrackId, setActiveCaptionTrackId] = useState<string | null>(null);
+	const [refWavPath, setRefWavPath] = useState<string | null>(null);
+	const [dubbedAudio, setDubbedAudio] = useState<DubbedAudio | null>(null);
+	const [lipSyncVideoPath, setLipSyncVideoPath] = useState<string | null>(null);
+	const lipSyncVideoPathRef = useRef<string | null>(null);
+
+	// Derive autoCaptions from active track for all existing consumers
+	const autoCaptions = useMemo(() => {
+		const track = captionTracks.find((t) => t.id === activeCaptionTrackId);
+		return track?.cues ?? [];
+	}, [captionTracks, activeCaptionTrackId]);
+
+	// Compatibility setter for existing callers (history, caption editing, etc.)
+	const setAutoCaptions = useCallback(
+		(cuesOrUpdater: CaptionCue[] | ((prev: CaptionCue[]) => CaptionCue[])) => {
+			setCaptionTracks((prev) =>
+				prev.map((t) =>
+					t.id !== activeCaptionTrackId
+						? t
+						: {
+								...t,
+								cues:
+									typeof cuesOrUpdater === "function"
+										? cuesOrUpdater(t.cues)
+										: cuesOrUpdater,
+							},
+				),
+			);
+		},
+		[activeCaptionTrackId],
+	);
+
 	const [autoCaptionSettings, setAutoCaptionSettings] = useState<AutoCaptionSettings>(
 		DEFAULT_AUTO_CAPTION_SETTINGS,
 	);
@@ -589,7 +739,10 @@ export default function VideoEditor() {
 	const [exportError, setExportError] = useState<string | null>(null);
 	const [showExportDropdown, setShowExportDropdown] = useState(false);
 	const [previewVolume, setPreviewVolume] = useState(1);
-	const [sourceAudioFallbackPaths, setSourceAudioFallbackPaths] = useState<string[]>([]);
+	const [recordedSourceAudioFallbackPaths, setRecordedSourceAudioFallbackPaths] = useState<
+		string[]
+	>([]);
+	const [dubbedAudioFallbackPath, setDubbedAudioFallbackPath] = useState<string | null>(null);
 	const [aspectRatio, setAspectRatio] = useState<AspectRatio>(
 		initialEditorPreferences.aspectRatio,
 	);
@@ -654,6 +807,7 @@ export default function VideoEditor() {
 	const cropSnapshotRef = useRef<CropRegion | null>(null);
 	const mp4SupportRequestRef = useRef(0);
 	const smokeExportStartedRef = useRef(false);
+	const dubbedAudioFallbackPathRef = useRef<string | null>(null);
 	const [historyVersion, setHistoryVersion] = useState(0);
 	const timelineRef = useRef<TimelineEditorHandle>(null);
 
@@ -745,7 +899,9 @@ export default function VideoEditor() {
 		}
 		context.imageSmoothingEnabled = true;
 		context.imageSmoothingQuality = "high";
-		const editorBgHsl = getComputedStyle(document.documentElement).getPropertyValue("--editor-bg").trim();
+		const editorBgHsl = getComputedStyle(document.documentElement)
+			.getPropertyValue("--editor-bg")
+			.trim();
 		context.fillStyle = editorBgHsl ? `hsl(${editorBgHsl})` : "#111113";
 		context.fillRect(0, 0, targetWidth, targetHeight);
 
@@ -781,7 +937,9 @@ export default function VideoEditor() {
 					padding,
 					cropRegion,
 					webcam,
-					webcamUrl: resolvedWebcamVideoUrl ?? (webcam.sourcePath ? toFileUrl(webcam.sourcePath) : null),
+					webcamUrl:
+						resolvedWebcamVideoUrl ??
+						(webcam.sourcePath ? toFileUrl(webcam.sourcePath) : null),
 					videoWidth: previewVideo.videoWidth,
 					videoHeight: previewVideo.videoHeight,
 					annotationRegions,
@@ -1100,7 +1258,7 @@ export default function VideoEditor() {
 
 	const editorSectionButtons = useMemo(
 		() => [
-			{ id: "scene" as const, label: t("settings.sections.scene", "Scene"), icon: PhSparkle },
+			{ id: "scene" as const, label: t("settings.sections.scene", "Scene"), icon: PhScene },
 			{
 				id: "cursor" as const,
 				label: t("settings.sections.cursor", "Cursor"),
@@ -1115,6 +1273,11 @@ export default function VideoEditor() {
 				id: "captions" as const,
 				label: t("settings.sections.captions", "Captions"),
 				icon: PhCaptions,
+			},
+			{
+				id: "ai" as const,
+				label: "AI",
+				icon: PhRobot,
 			},
 			{
 				id: "settings" as const,
@@ -1176,6 +1339,8 @@ export default function VideoEditor() {
 				annotationRegions: AnnotationRegion[];
 				audioRegions: AudioRegion[];
 				autoCaptions: CaptionCue[];
+				captionTracks: CaptionTrack[];
+				activeCaptionTrackId: string | null;
 				autoCaptionSettings: AutoCaptionSettings;
 				aspectRatio: AspectRatio;
 				exportEncodingMode: ExportEncodingMode;
@@ -1187,10 +1352,43 @@ export default function VideoEditor() {
 				gifFrameRate: GifFrameRate;
 				gifLoop: boolean;
 				gifSizePreset: GifSizePreset;
+				refWavPath: string | null;
+				dubbedAudio: DubbedAudio | null;
+				lipSyncVideoPath: string | null;
 			}>,
 		) => {
-			const { cropRegion: _cropRegion, ...persistedEditor } = editor;
-			return persistedEditor;
+			const {
+				cropRegion: _cropRegion,
+				dubbedAudio: da,
+				refWavPath: rwp,
+				lipSyncVideoPath: lsPath,
+				...persistedEditor
+			} = editor;
+			// Encode dubbed audio as base64 for JSON serialization
+			let dubbedAudioBase64: string | null = null;
+			let dubbedAudioLanguage: string | null = null;
+			let dubbedAudioLabel: string | null = null;
+			let dubbedAudioCreatedAt: number | null = null;
+			if (da?.audioData) {
+				const bytes = new Uint8Array(da.audioData);
+				let binary = "";
+				for (let i = 0; i < bytes.length; i++) {
+					binary += String.fromCharCode(bytes[i]);
+				}
+				dubbedAudioBase64 = btoa(binary);
+				dubbedAudioLanguage = da.language;
+				dubbedAudioLabel = da.label;
+				dubbedAudioCreatedAt = da.createdAt;
+			}
+			return {
+				...persistedEditor,
+				voiceReferenceId: rwp,
+				dubbedAudioBase64,
+				dubbedAudioLanguage,
+				dubbedAudioLabel,
+				dubbedAudioCreatedAt,
+				lipSyncVideoPath: lsPath ?? null,
+			};
 		},
 		[],
 	);
@@ -1199,11 +1397,42 @@ export default function VideoEditor() {
 		() => videoSourcePath ?? (videoPath ? fromFileUrl(videoPath) : null),
 		[videoPath, videoSourcePath],
 	);
+	const cleanupMaterializedDubbedAudio = useCallback(async (filePath: string | null) => {
+		if (!filePath) return;
+		try {
+			await window.electronAPI.cleanupMaterializedDubbedAudio(filePath);
+		} catch {
+			// Ignore temp cleanup failures.
+		}
+	}, []);
+
+	// Keep lip sync ref in sync for cleanup on unmount
+	useEffect(() => {
+		lipSyncVideoPathRef.current = lipSyncVideoPath;
+	}, [lipSyncVideoPath]);
+
+	// Cleanup lip sync video on unmount
+	useEffect(() => {
+		return () => {
+			const pathToClean = lipSyncVideoPathRef.current;
+			if (pathToClean) {
+				window.electronAPI.cleanupLipSyncVideo(pathToClean).catch(() => {
+					// Ignore cleanup errors on unmount
+				});
+			}
+		};
+	}, []);
+
+	const sourceAudioFallbackPaths = useMemo(
+		() =>
+			dubbedAudioFallbackPath ? [dubbedAudioFallbackPath] : recordedSourceAudioFallbackPaths,
+		[dubbedAudioFallbackPath, recordedSourceAudioFallbackPaths],
+	);
 	const hasSourceAudioFallback = sourceAudioFallbackPaths.length > 0;
 
 	useEffect(() => {
 		let cancelled = false;
-		setSourceAudioFallbackPaths([]);
+		setRecordedSourceAudioFallbackPaths([]);
 
 		if (!currentSourcePath) {
 			return () => {
@@ -1218,10 +1447,10 @@ export default function VideoEditor() {
 				if (cancelled) {
 					return;
 				}
-				setSourceAudioFallbackPaths(result.success ? (result.paths ?? []) : []);
+				setRecordedSourceAudioFallbackPaths(result.success ? (result.paths ?? []) : []);
 			} catch {
 				if (!cancelled) {
-					setSourceAudioFallbackPaths([]);
+					setRecordedSourceAudioFallbackPaths([]);
 				}
 			}
 		})();
@@ -1231,12 +1460,68 @@ export default function VideoEditor() {
 		};
 	}, [currentSourcePath]);
 
+	useEffect(() => {
+		let cancelled = false;
+		const previousFallbackPath = dubbedAudioFallbackPathRef.current;
+
+		if (!dubbedAudio || dubbedAudio.audioData.byteLength === 0) {
+			dubbedAudioFallbackPathRef.current = null;
+			setDubbedAudioFallbackPath(null);
+			void cleanupMaterializedDubbedAudio(previousFallbackPath);
+			return () => {
+				cancelled = true;
+			};
+		}
+
+		void (async () => {
+			try {
+				const result = await window.electronAPI.materializeDubbedAudio({
+					audioData: dubbedAudio.audioData,
+				});
+				if (!result.success || !result.path) {
+					throw new Error(result.error || "Failed to prepare dubbed audio.");
+				}
+
+				if (cancelled) {
+					await cleanupMaterializedDubbedAudio(result.path);
+					return;
+				}
+
+				dubbedAudioFallbackPathRef.current = result.path;
+				setDubbedAudioFallbackPath(result.path);
+				if (previousFallbackPath && previousFallbackPath !== result.path) {
+					void cleanupMaterializedDubbedAudio(previousFallbackPath);
+				}
+			} catch (error) {
+				if (!cancelled) {
+					console.error("Failed to materialize dubbed audio:", error);
+					dubbedAudioFallbackPathRef.current = null;
+					setDubbedAudioFallbackPath(null);
+					if (previousFallbackPath) {
+						void cleanupMaterializedDubbedAudio(previousFallbackPath);
+					}
+				}
+			}
+		})();
+
+		return () => {
+			cancelled = true;
+		};
+	}, [cleanupMaterializedDubbedAudio, dubbedAudio]);
+
+	useEffect(() => {
+		return () => {
+			void cleanupMaterializedDubbedAudio(dubbedAudioFallbackPathRef.current);
+			dubbedAudioFallbackPathRef.current = null;
+		};
+	}, [cleanupMaterializedDubbedAudio]);
+
 	const projectDisplayName = useMemo(() => {
 		const fileName =
 			currentProjectPath?.split(/[\\/]/).pop() ??
 			currentSourcePath?.split(/[\\/]/).pop() ??
 			"";
-		const withoutExtension = fileName.replace(/\.recordly$/i, "").replace(/\.[^.]+$/, "");
+		const withoutExtension = fileName.replace(/\.unbound$/i, "").replace(/\.[^.]+$/, "");
 		return withoutExtension || t("editor.project.untitled", "Untitled");
 	}, [currentProjectPath, currentSourcePath, t]);
 
@@ -1278,6 +1563,8 @@ export default function VideoEditor() {
 				annotationRegions,
 				audioRegions,
 				autoCaptions,
+				captionTracks,
+				activeCaptionTrackId,
 				autoCaptionSettings,
 				aspectRatio,
 				exportEncodingMode,
@@ -1289,6 +1576,9 @@ export default function VideoEditor() {
 				gifFrameRate,
 				gifLoop,
 				gifSizePreset,
+				refWavPath,
+				dubbedAudio,
+				lipSyncVideoPath,
 			}),
 		[
 			buildPersistedEditorState,
@@ -1326,6 +1616,8 @@ export default function VideoEditor() {
 			annotationRegions,
 			audioRegions,
 			autoCaptions,
+			captionTracks,
+			activeCaptionTrackId,
 			autoCaptionSettings,
 			aspectRatio,
 			exportEncodingMode,
@@ -1338,6 +1630,9 @@ export default function VideoEditor() {
 			gifLoop,
 			gifSizePreset,
 			frame,
+			refWavPath,
+			dubbedAudio,
+			lipSyncVideoPath,
 		],
 	);
 
@@ -1348,7 +1643,8 @@ export default function VideoEditor() {
 			speedRegions,
 			annotationRegions,
 			audioRegions,
-			autoCaptions,
+			captionTracks,
+			activeCaptionTrackId,
 			selectedZoomId,
 			selectedTrimId,
 			selectedClipId,
@@ -1362,7 +1658,8 @@ export default function VideoEditor() {
 		speedRegions,
 		annotationRegions,
 		audioRegions,
-		autoCaptions,
+		captionTracks,
+		activeCaptionTrackId,
 		selectedZoomId,
 		selectedTrimId,
 		selectedClipId,
@@ -1380,7 +1677,8 @@ export default function VideoEditor() {
 			setSpeedRegions(cloned.speedRegions);
 			setAnnotationRegions(cloned.annotationRegions);
 			setAudioRegions(cloned.audioRegions);
-			setAutoCaptions(cloned.autoCaptions);
+			setCaptionTracks(cloned.captionTracks);
+			setActiveCaptionTrackId(cloned.activeCaptionTrackId);
 			setSelectedZoomId(cloned.selectedZoomId);
 			setSelectedTrimId(cloned.selectedTrimId);
 			setSelectedClipId(cloned.selectedClipId);
@@ -1510,7 +1808,31 @@ export default function VideoEditor() {
 			setSpeedRegions(normalizedEditor.speedRegions);
 			setAnnotationRegions(normalizedEditor.annotationRegions);
 			setAudioRegions(normalizedEditor.audioRegions);
-			setAutoCaptions(normalizedEditor.autoCaptions);
+			setCaptionTracks(normalizedEditor.captionTracks);
+			setActiveCaptionTrackId(normalizedEditor.activeCaptionTrackId);
+			setRefWavPath(normalizedEditor.voiceReferenceId ?? null);
+			// Restore dubbed audio from base64
+			if (normalizedEditor.dubbedAudioBase64) {
+				try {
+					const binaryStr = atob(normalizedEditor.dubbedAudioBase64);
+					const bytes = new Uint8Array(binaryStr.length);
+					for (let i = 0; i < binaryStr.length; i++) {
+						bytes[i] = binaryStr.charCodeAt(i);
+					}
+					setDubbedAudio({
+						audioData: bytes.buffer as ArrayBuffer,
+						refWavPath: normalizedEditor.voiceReferenceId ?? "",
+						language: normalizedEditor.dubbedAudioLanguage ?? "",
+						label: normalizedEditor.dubbedAudioLabel ?? "Dub",
+						createdAt: normalizedEditor.dubbedAudioCreatedAt ?? 0,
+					});
+				} catch {
+					setDubbedAudio(null);
+				}
+			} else {
+				setDubbedAudio(null);
+			}
+			setLipSyncVideoPath(normalizedEditor.lipSyncVideoPath ?? null);
 			setAutoCaptionSettings(normalizedEditor.autoCaptionSettings);
 			setAspectRatio(normalizedEditor.aspectRatio);
 			setExportEncodingMode(normalizedEditor.exportEncodingMode);
@@ -2078,10 +2400,12 @@ export default function VideoEditor() {
 		videoSourcePath,
 		whisperExecutablePath,
 		whisperModelPath,
+		setAutoCaptions,
 	]);
 
 	const handleClearAutoCaptions = useCallback(() => {
-		setAutoCaptions([]);
+		setCaptionTracks([]);
+		setActiveCaptionTrackId(null);
 		setAutoCaptionSettings((prev) => ({ ...prev, enabled: false }));
 	}, []);
 
@@ -3373,12 +3697,15 @@ export default function VideoEditor() {
 			previousTimelineTime === null || Math.abs(currentTime - previousTimelineTime) > 0.25;
 		const driftThreshold = isPlaying ? 0.35 : 0.01;
 
-		for (const audio of sourceAudioElementsRef.current.values()) {
+		for (const [audioPath, audio] of sourceAudioElementsRef.current.entries()) {
 			const audioDuration = Number.isFinite(audio.duration) ? audio.duration : null;
-			const startDelaySeconds = estimateCompanionAudioStartDelaySeconds(
-				duration,
-				audioDuration,
-			);
+			// Recorded sidecar audio can start late relative to the screen stream.
+			// Materialized dubbed audio is already stitched against the full timeline
+			// and should stay aligned to t=0.
+			const startDelaySeconds =
+				audioPath === dubbedAudioFallbackPath
+					? 0
+					: estimateCompanionAudioStartDelaySeconds(duration, audioDuration);
 			const beforeAudioStart = currentTime + 0.001 < startDelaySeconds;
 			const targetTime = clampMediaTimeToDuration(
 				currentTime - startDelaySeconds,
@@ -3411,7 +3738,7 @@ export default function VideoEditor() {
 		}
 
 		lastSourceAudioSyncTimeRef.current = currentTime;
-	}, [currentTime, duration, isPlaying, sourceAudioFallbackPaths, speedRegions]);
+	}, [currentTime, dubbedAudioFallbackPath, duration, isPlaying, sourceAudioFallbackPaths, speedRegions]);
 
 	const showExportSuccessToast = useCallback((filePath: string) => {
 		toast.success(`Exported successfully to ${filePath}`, {
@@ -3512,7 +3839,7 @@ export default function VideoEditor() {
 				if (settings.format === "gif" && settings.gifConfig) {
 					// GIF Export
 					const gifExporter = new GifExporter({
-						videoUrl: videoPath,
+						videoUrl: lipSyncVideoPath ? toFileUrl(lipSyncVideoPath) : videoPath,
 						width: settings.gifConfig.width,
 						height: settings.gifConfig.height,
 						frameRate: settings.gifConfig.frameRate,
@@ -3539,7 +3866,9 @@ export default function VideoEditor() {
 						videoPadding: padding,
 						cropRegion,
 						webcam,
-						webcamUrl: resolvedWebcamVideoUrl ?? (webcam.sourcePath ? toFileUrl(webcam.sourcePath) : null),
+						webcamUrl:
+							resolvedWebcamVideoUrl ??
+							(webcam.sourcePath ? toFileUrl(webcam.sourcePath) : null),
 						annotationRegions,
 						autoCaptions,
 						autoCaptionSettings,
@@ -3676,7 +4005,7 @@ export default function VideoEditor() {
 					);
 
 					const exporterConfig = {
-						videoUrl: videoPath,
+						videoUrl: lipSyncVideoPath ? toFileUrl(lipSyncVideoPath) : videoPath,
 						width: exportWidth,
 						height: exportHeight,
 						frameRate: selectedMp4FrameRate,
@@ -3708,7 +4037,9 @@ export default function VideoEditor() {
 						padding,
 						cropRegion,
 						webcam,
-						webcamUrl: resolvedWebcamVideoUrl ?? (webcam.sourcePath ? toFileUrl(webcam.sourcePath) : null),
+						webcamUrl:
+							resolvedWebcamVideoUrl ??
+							(webcam.sourcePath ? toFileUrl(webcam.sourcePath) : null),
 						annotationRegions,
 						autoCaptions,
 						autoCaptionSettings,
@@ -3727,6 +4058,7 @@ export default function VideoEditor() {
 						frame,
 						audioRegions,
 						sourceAudioFallbackPaths,
+						preferSourceAudioFallback: Boolean(dubbedAudioFallbackPath),
 						previewWidth,
 						previewHeight,
 						onProgress: (progress: ExportProgress) => {
@@ -3955,6 +4287,7 @@ export default function VideoEditor() {
 			effectiveSpeedRegions,
 			frame,
 			smokeExportConfig.encodingMode,
+			lipSyncVideoPath,
 		],
 	);
 
@@ -4283,7 +4616,7 @@ export default function VideoEditor() {
 	}
 
 	return (
-		<div className="flex flex-col h-screen bg-editor-bg text-foreground overflow-hidden selection:bg-[#2563EB]/30">
+		<div className="flex flex-col h-screen bg-editor-bg text-foreground overflow-hidden selection:bg-[#D4D0C8]/30">
 			<div
 				className="relative flex h-11 flex-shrink-0 items-center justify-between bg-editor-header/88 px-5 backdrop-blur-md border-b border-foreground/10 z-50"
 				style={{ WebkitAppRegion: "drag" } as React.CSSProperties}
@@ -4337,7 +4670,7 @@ export default function VideoEditor() {
 						{projectDisplayName}
 					</span>
 					<span className="text-xs font-medium tracking-tight text-muted-foreground/70">
-						.recordly
+						.unbound
 					</span>
 				</div>
 				<div
@@ -4363,8 +4696,8 @@ export default function VideoEditor() {
 						<span
 							className={`${hasUnsavedChanges ? "flex" : "hidden"} size-2 relative`}
 						>
-							<span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#2563EB] opacity-75"></span>
-							<span className="relative inline-flex size-2 rounded-full bg-[#2563EB]"></span>
+							<span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#D4D0C8] opacity-75"></span>
+							<span className="relative inline-flex size-2 rounded-full bg-[#D4D0C8]"></span>
 						</span>
 						<Save className="h-4 w-4" weight="fill" />
 						<span className="text-sm font-semibold tracking-tight">
@@ -4381,7 +4714,7 @@ export default function VideoEditor() {
 							<Button
 								type="button"
 								onClick={handleOpenExportDropdown}
-								className="inline-flex h-8 min-w-[112px] items-center justify-center gap-2 rounded-[5px] bg-[#2563EB] px-4.5 text-white transition-colors hover:bg-[#2563EB]/92"
+								className="inline-flex h-8 min-w-[112px] items-center justify-center gap-2 rounded-[5px] bg-[#D4D0C8] px-4.5 text-white transition-colors hover:bg-[#D4D0C8]/92"
 							>
 								<Download className="h-4 w-4" />
 								<span className="text-sm font-semibold tracking-tight">
@@ -4442,7 +4775,7 @@ export default function VideoEditor() {
 											<div className="indeterminate-progress h-full rounded-full bg-transparent" />
 										) : (
 											<div
-												className="h-full bg-[#2563EB] transition-all duration-300 ease-out"
+												className="h-full bg-[#D4D0C8] transition-all duration-300 ease-out"
 												style={{
 													width: `${Math.min(isRenderingAudio ? (exportProgress.audioProgress ?? 0) * 100 : (exportFinalizingProgress ?? exportProgress?.percentage ?? 8), 100)}%`,
 												}}
@@ -4454,7 +4787,10 @@ export default function VideoEditor() {
 									</p>
 									{isRenderingAudio ? (
 										<p className="mt-1 text-[11px] text-muted-foreground/70">
-											{t("editor.export.processingAudioEdits", "Processing audio with speed/overlay edits")}
+											{t(
+												"editor.export.processingAudioEdits",
+												"Processing audio with speed/overlay edits",
+											)}
 										</p>
 									) : exportRenderSpeedLabel ? (
 										<p className="mt-1 text-[11px] text-muted-foreground/70">
@@ -4485,7 +4821,7 @@ export default function VideoEditor() {
 											<Button
 												type="button"
 												onClick={handleRetrySaveExport}
-												className="h-8 flex-1 rounded-[5px] bg-[#2563EB] text-xs font-semibold text-white hover:bg-[#2563EB]/92"
+												className="h-8 flex-1 rounded-[5px] bg-[#D4D0C8] text-xs font-semibold text-white hover:bg-[#D4D0C8]/92"
 											>
 												{t("editor.actions.saveAgain", "Save Again")}
 											</Button>
@@ -4523,7 +4859,7 @@ export default function VideoEditor() {
 										<Button
 											type="button"
 											onClick={revealExportedFile}
-											className="h-8 flex-1 rounded-[5px] bg-[#2563EB] text-xs font-semibold text-white hover:bg-[#2563EB]/92"
+											className="h-8 flex-1 rounded-[5px] bg-[#D4D0C8] text-xs font-semibold text-white hover:bg-[#D4D0C8]/92"
 										>
 											{t("editor.actions.showInFolder", "Show In Folder")}
 										</Button>
@@ -4571,83 +4907,29 @@ export default function VideoEditor() {
 					{/* Settings sidebar */}
 					<div className="flex flex-shrink-0 gap-1.5">
 						{/* Icon rail */}
-						<div className="flex flex-shrink-0 flex-col items-center gap-0.5 px-2 py-2">
+						<div className="flex flex-shrink-0 flex-col items-center gap-1 rounded-[20px] border border-foreground/[0.06] bg-foreground/[0.025] px-2 py-2 shadow-[0_14px_34px_rgba(0,0,0,0.08),inset_0_1px_0_rgba(255,255,255,0.03)] backdrop-blur-xl">
 							{editorSectionButtons.map((section) => {
 								const isActive = activeEffectSection === section.id;
 								return (
-									<div key={section.id} className="flex items-center">
-										<motion.button
-											type="button"
-											onClick={() => setActiveEffectSection(section.id)}
-											title={section.label}
-											className="group relative flex h-9 w-9 items-center justify-center rounded-lg outline-none focus:outline-none focus-visible:outline-none"
-											animate={{ opacity: isActive ? 1 : 0.55 }}
-											transition={{ duration: 0.14 }}
-										>
-											{isActive && (
-												<motion.span
-													layoutId="rail-active-bg"
-													className="absolute inset-0 rounded-lg bg-foreground/[0.08]"
-													transition={{
-														type: "spring",
-														stiffness: 450,
-														damping: 35,
-													}}
-												/>
-											)}
-											<motion.span
-												className="relative z-10"
-												animate={{
-													color: isActive
-														? "#2563EB"
-														: "hsl(var(--foreground))",
-												}}
-												transition={{ duration: 0.14 }}
-											>
-												{typeof section.icon === "string" ? (
-													<ExtensionIcon
-														icon={section.icon}
-														className="h-[27px] w-[27px]"
-													/>
-												) : (
-													<section.icon
-														className="h-[27px] w-[27px]"
-														weight={isActive ? "fill" : "regular"}
-													/>
-												)}
-											</motion.span>
-										</motion.button>
-										<div className="ml-1.5 h-1.5 w-1.5 flex-shrink-0">
-											{isActive && (
-												<motion.span
-													layoutId="rail-active-dot"
-													className="block h-1.5 w-1.5 rounded-full bg-[#2563EB]"
-													initial={{ opacity: 0, scale: 0.5 }}
-													animate={{ opacity: 1, scale: 1 }}
-													exit={{ opacity: 0, scale: 0.5 }}
-													transition={{
-														type: "spring",
-														stiffness: 500,
-														damping: 32,
-													}}
-												/>
-											)}
-										</div>
-									</div>
+									<EditorRailButton
+										key={section.id}
+										label={section.label}
+										title={section.label}
+										isActive={isActive}
+										onClick={() => setActiveEffectSection(section.id)}
+										icon={section.icon}
+									/>
 								);
 							})}
-							<div className="mt-auto flex flex-col items-center gap-0.5 pt-3">
-								<motion.button
-									type="button"
-									onClick={() => toast.info("Account coming soon")}
+							<div className="mt-auto flex flex-col items-center gap-1 pt-3">
+								<div className="h-px w-7 bg-gradient-to-r from-transparent via-foreground/12 to-transparent" />
+								<EditorRailButton
+									label="Account"
 									title="Account"
-									className="group relative flex h-9 w-9 items-center justify-center rounded-lg text-foreground/55 outline-none transition hover:text-foreground focus:outline-none focus-visible:outline-none"
-									whileHover={{ opacity: 1 }}
-									initial={{ opacity: 0.55 }}
-								>
-									<motion.span className="absolute inset-0 rounded-lg bg-foreground/[0.04] opacity-0 transition group-hover:opacity-100" />
-									<User className="relative z-10 h-[22px] w-[22px]" />
-								</motion.button>
+									isActive={false}
+									onClick={() => toast.info("Account coming soon")}
+									icon={PhAccount}
+								/>
 							</div>
 						</div>
 						{/* Panel */}
@@ -4798,6 +5080,51 @@ export default function VideoEditor() {
 								}
 								onSpeedChange={handleSpeedChange}
 								onSpeedDelete={handleSpeedDelete}
+								videoPath={videoPath}
+								captionTracks={captionTracks}
+								activeCaptionTrackId={activeCaptionTrackId}
+								onActiveTrackChange={setActiveCaptionTrackId}
+								onTranslationGenerated={(track) => {
+									setCaptionTracks((prev) => [...prev, track]);
+									setActiveCaptionTrackId(track.id);
+								}}
+								onAiCaptionsGenerated={(cues, language) => {
+									const lang = language || "auto";
+									const label = CAPTION_LANGUAGE_LABELS[lang] || lang;
+									const trackId = `source-${Date.now()}`;
+									const newTrack: CaptionTrack = {
+										id: trackId,
+										language: lang,
+										label,
+										cues,
+										isSource: true,
+									};
+									// Replace previous source track, keep translation tracks
+									setCaptionTracks((prev) => [
+										newTrack,
+										...prev.filter((t) => !t.isSource),
+									]);
+									setActiveCaptionTrackId(trackId);
+									setAutoCaptionSettings((prev) => ({
+										...prev,
+										enabled: true,
+									}));
+								}}
+								totalDurationMs={Math.round(duration * 1000)}
+								refWavPath={refWavPath}
+								dubbedAudio={dubbedAudio}
+								onVoiceCloned={setRefWavPath}
+								onDubbedAudioGenerated={setDubbedAudio}
+								lipSyncVideoPath={lipSyncVideoPath}
+								onLipSyncGenerated={(result) => {
+									// Cleanup previous lip sync video if any
+									if (lipSyncVideoPath) {
+										window.electronAPI
+											.cleanupLipSyncVideo(lipSyncVideoPath)
+											.catch(() => undefined);
+									}
+									setLipSyncVideoPath(result.videoPath);
+								}}
 							/>
 						)}
 					</div>
@@ -4833,7 +5160,7 @@ export default function VideoEditor() {
 												>
 													<span>{getAspectRatioLabel(ratio)}</span>
 													{aspectRatio === ratio && (
-														<Check className="w-3 h-3 text-[#2563EB]" />
+														<Check className="w-3 h-3 text-[#D4D0C8]" />
 													)}
 												</DropdownMenuItem>
 											))}
@@ -4851,7 +5178,7 @@ export default function VideoEditor() {
 											{t("settings.crop.title")}
 										</span>
 										{isCropped ? (
-											<span className="h-1.5 w-1.5 rounded-full bg-[#2563EB]" />
+											<span className="h-1.5 w-1.5 rounded-full bg-[#D4D0C8]" />
 										) : null}
 									</Button>
 								</div>
@@ -5010,7 +5337,7 @@ export default function VideoEditor() {
 									onClick={() => timelineRef.current?.addZoom()}
 									variant="ghost"
 									size="icon"
-									className="h-7 w-7 rounded-full text-muted-foreground transition-all hover:bg-[#2563EB]/10 hover:text-[#2563EB]"
+									className="h-7 w-7 rounded-full text-muted-foreground transition-all hover:bg-[#D4D0C8]/10 hover:text-[#D4D0C8]"
 									title={t("timeline.zoom.addZoom")}
 								>
 									<ZoomIn className="w-4 h-4" />
@@ -5019,7 +5346,7 @@ export default function VideoEditor() {
 									onClick={() => timelineRef.current?.suggestZooms()}
 									variant="ghost"
 									size="icon"
-									className="h-7 w-7 rounded-full text-muted-foreground transition-all hover:bg-[#2563EB]/10 hover:text-[#2563EB]"
+									className="h-7 w-7 rounded-full text-muted-foreground transition-all hover:bg-[#D4D0C8]/10 hover:text-[#D4D0C8]"
 									title={t("timeline.zoom.suggestZooms")}
 								>
 									<WandSparkles className="w-4 h-4" />
@@ -5262,7 +5589,7 @@ export default function VideoEditor() {
 							<Button
 								onClick={handleCloseCropEditor}
 								size="lg"
-								className="bg-[#2563EB] text-white hover:bg-[#2563EB]/90"
+								className="bg-[#D4D0C8] text-[#0A0A0A] hover:bg-[#D4D0C8]/90"
 							>
 								{t("common.actions.done")}
 							</Button>

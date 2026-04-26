@@ -63,6 +63,7 @@ interface VideoExporterConfig extends ExportConfig {
 	frame?: string | null;
 	audioRegions?: AudioRegion[];
 	sourceAudioFallbackPaths?: string[];
+	preferSourceAudioFallback?: boolean;
 	previewWidth?: number;
 	previewHeight?: number;
 	onProgress?: (progress: ExportProgress) => void;
@@ -142,9 +143,9 @@ export class VideoExporter {
 				? await this.tryStartNativeVideoExport()
 				: false;
 			const shouldUseFfmpegAudioFallback =
-				!useNativeEncoder
-				&& audioPlan.audioMode !== "none"
-				&& !(await isAacAudioEncodingSupported());
+				!useNativeEncoder &&
+				audioPlan.audioMode !== "none" &&
+				!(await isAacAudioEncodingSupported());
 
 			if (!useNativeEncoder) {
 				await this.initializeEncoder();
@@ -456,7 +457,10 @@ export class VideoExporter {
 			(audioPath) => typeof audioPath === "string" && audioPath.trim().length > 0,
 		);
 		const localVideoSourcePath = this.getNativeVideoSourcePath();
+		const preferSourceAudioFallback =
+			this.config.preferSourceAudioFallback === true && sourceAudioFallbackPaths.length > 0;
 		const primaryAudioSourcePath =
+			(preferSourceAudioFallback ? sourceAudioFallbackPaths[0] : null) ??
 			(videoInfo.hasAudio ? localVideoSourcePath : null) ??
 			sourceAudioFallbackPaths[0] ??
 			null;
@@ -578,7 +582,8 @@ export class VideoExporter {
 						);
 						if (!writeResult.success && !this.cancelled) {
 							throw new Error(
-								writeResult.error || "Failed to write H.264 chunk to native encoder",
+								writeResult.error ||
+									"Failed to write H.264 chunk to native encoder",
 							);
 						}
 					})
@@ -603,8 +608,7 @@ export class VideoExporter {
 		try {
 			encoder.configure(encoderConfig);
 		} catch (error) {
-			this.nativeEncoderError =
-				error instanceof Error ? error : new Error(String(error));
+			this.nativeEncoderError = error instanceof Error ? error : new Error(String(error));
 			try {
 				encoder.close();
 			} catch (closeError) {
@@ -644,7 +648,7 @@ export class VideoExporter {
 		// Apply backpressure: don't queue too far ahead of FFmpeg's stdin pipe
 		while (
 			this.nativeH264Encoder.encodeQueueSize >=
-				Math.max(1, Math.floor(this.config.maxEncodeQueue ?? DEFAULT_MAX_ENCODE_QUEUE))
+			Math.max(1, Math.floor(this.config.maxEncodeQueue ?? DEFAULT_MAX_ENCODE_QUEUE))
 		) {
 			await new Promise<void>((r) => setTimeout(r, 2));
 			if (this.cancelled) return;
@@ -774,7 +778,8 @@ export class VideoExporter {
 					audioPlan.audioMode === "copy-source" || audioPlan.audioMode === "trim-source"
 						? audioPlan.audioSourcePath
 						: null,
-				trimSegments: audioPlan.audioMode === "trim-source" ? audioPlan.trimSegments : undefined,
+				trimSegments:
+					audioPlan.audioMode === "trim-source" ? audioPlan.trimSegments : undefined,
 				editedAudioData: editedAudioBuffer,
 				editedAudioMimeType,
 			}),
@@ -984,7 +989,8 @@ export class VideoExporter {
 						}
 					} catch (error) {
 						console.error("Muxing error:", error);
-						const muxingError = error instanceof Error ? error : new Error(String(error));
+						const muxingError =
+							error instanceof Error ? error : new Error(String(error));
 						if (!this.encoderError) {
 							this.encoderError = muxingError;
 						}

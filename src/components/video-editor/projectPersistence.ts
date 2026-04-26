@@ -18,6 +18,7 @@ import {
 	type AutoCaptionSettings,
 	type CaptionCue,
 	type CaptionCueWord,
+	type CaptionTrack,
 	type ClipRegion,
 	type CropRegion,
 	type CursorStyle,
@@ -92,7 +93,7 @@ export interface ProjectEditorState {
 	cursorSway: number;
 	borderRadius: number;
 	padding: number;
-	/** Selected frame ID (e.g. "recordly.frames/browser-dark"), or null for none */
+	/** Selected frame ID (e.g. "unbound.frames/browser-dark"), or null for none */
 	frame: string | null;
 	cropRegion: CropRegion;
 	zoomRegions: ZoomRegion[];
@@ -102,6 +103,8 @@ export interface ProjectEditorState {
 	annotationRegions: AnnotationRegion[];
 	audioRegions: AudioRegion[];
 	autoCaptions: CaptionCue[];
+	captionTracks: CaptionTrack[];
+	activeCaptionTrackId: string | null;
 	autoCaptionSettings: AutoCaptionSettings;
 	webcam: WebcamOverlaySettings;
 	aspectRatio: AspectRatio;
@@ -114,6 +117,12 @@ export interface ProjectEditorState {
 	gifFrameRate: GifFrameRate;
 	gifLoop: boolean;
 	gifSizePreset: GifSizePreset;
+	voiceReferenceId: string | null;
+	dubbedAudioBase64: string | null;
+	dubbedAudioLanguage: string | null;
+	dubbedAudioLabel: string | null;
+	dubbedAudioCreatedAt: number | null;
+	lipSyncVideoPath: string | null;
 }
 
 export interface EditorProjectData {
@@ -162,7 +171,7 @@ function normalizeZoomTransitionEasing(
 	value: unknown,
 	fallback: ZoomTransitionEasing,
 ): ZoomTransitionEasing {
-	return value === "recordly" ||
+	return value === "unbound" ||
 		value === "glide" ||
 		value === "smooth" ||
 		value === "snappy" ||
@@ -668,6 +677,37 @@ export function normalizeProjectEditor(editor: Partial<ProjectEditorState>): Pro
 			: DEFAULT_AUTO_CAPTION_SETTINGS.backgroundOpacity,
 	};
 
+	// Normalize caption tracks — migrate flat autoCaptions to a single track if needed
+	const rawCaptionTracks = (editor as Partial<ProjectEditorState>).captionTracks;
+	const rawActiveCaptionTrackId = (editor as Partial<ProjectEditorState>).activeCaptionTrackId;
+	let normalizedCaptionTracks: CaptionTrack[];
+	let normalizedActiveCaptionTrackId: string | null;
+
+	if (Array.isArray(rawCaptionTracks) && rawCaptionTracks.length > 0) {
+		normalizedCaptionTracks = rawCaptionTracks.filter((track): track is CaptionTrack =>
+			Boolean(track && typeof track.id === "string" && Array.isArray(track.cues)),
+		);
+		normalizedActiveCaptionTrackId =
+			typeof rawActiveCaptionTrackId === "string" &&
+			normalizedCaptionTracks.some((t) => t.id === rawActiveCaptionTrackId)
+				? rawActiveCaptionTrackId
+				: (normalizedCaptionTracks[0]?.id ?? null);
+	} else if (normalizedAutoCaptions.length > 0) {
+		// Migrate flat autoCaptions to a single source track
+		const migratedTrack: CaptionTrack = {
+			id: "migrated-source",
+			language: "auto",
+			label: "Auto Detect",
+			cues: normalizedAutoCaptions,
+			isSource: true,
+		};
+		normalizedCaptionTracks = [migratedTrack];
+		normalizedActiveCaptionTrackId = migratedTrack.id;
+	} else {
+		normalizedCaptionTracks = [];
+		normalizedActiveCaptionTrackId = null;
+	}
+
 	const rawCropX = isFiniteNumber(editor.cropRegion?.x)
 		? editor.cropRegion.x
 		: DEFAULT_CROP_REGION.x;
@@ -763,6 +803,8 @@ export function normalizeProjectEditor(editor: Partial<ProjectEditorState>): Pro
 		annotationRegions: normalizedAnnotationRegions,
 		audioRegions: normalizedAudioRegions,
 		autoCaptions: normalizedAutoCaptions,
+		captionTracks: normalizedCaptionTracks,
+		activeCaptionTrackId: normalizedActiveCaptionTrackId,
 		autoCaptionSettings: normalizedAutoCaptionSettings,
 		webcam: {
 			enabled:
@@ -855,6 +897,18 @@ export function normalizeProjectEditor(editor: Partial<ProjectEditorState>): Pro
 			editor.gifSizePreset === "original"
 				? editor.gifSizePreset
 				: "medium",
+		voiceReferenceId:
+			typeof editor.voiceReferenceId === "string" ? editor.voiceReferenceId : null,
+		dubbedAudioBase64:
+			typeof editor.dubbedAudioBase64 === "string" ? editor.dubbedAudioBase64 : null,
+		dubbedAudioLanguage:
+			typeof editor.dubbedAudioLanguage === "string" ? editor.dubbedAudioLanguage : null,
+		dubbedAudioLabel:
+			typeof editor.dubbedAudioLabel === "string" ? editor.dubbedAudioLabel : null,
+		dubbedAudioCreatedAt:
+			typeof editor.dubbedAudioCreatedAt === "number" ? editor.dubbedAudioCreatedAt : null,
+		lipSyncVideoPath:
+			typeof editor.lipSyncVideoPath === "string" ? editor.lipSyncVideoPath : null,
 	};
 }
 

@@ -42,8 +42,8 @@ const TAB_OPTIONS: { value: ExtensionTab; labelKey: string }[] = [
 	{ value: "installed", labelKey: "tabs.installed" },
 ];
 
-const EXTENSIONS_DOCS_URL = "https://marketplace.recordly.dev/extensions";
-const EXTENSIONS_SUBMIT_URL = "https://marketplace.recordly.dev/extensions/submit";
+const EXTENSIONS_DOCS_URL = "https://marketplace.unbound.dev/extensions";
+const EXTENSIONS_SUBMIT_URL = "https://marketplace.unbound.dev/extensions/submit";
 
 function toSafeHttpUrl(value?: string): string | null {
 	if (!value) return null;
@@ -87,7 +87,7 @@ function InstalledExtensionCard({
 				isError
 					? "border-red-500/30 bg-red-500/5"
 					: isActive
-						? "border-[#2563EB]/20 bg-[#2563EB]/5"
+						? "border-[#D4D0C8]/20 bg-[#D4D0C8]/5"
 						: "border-foreground/[0.06] bg-white/[0.02] hover:bg-foreground/[0.04]",
 			)}
 			onClick={onClick}
@@ -246,7 +246,7 @@ function MarketplaceCard({
 						{extension.tags.slice(0, 3).map((tag) => (
 							<span
 								key={tag}
-								className="text-[8px] px-1 py-[1px] rounded bg-[#2563EB]/10 text-[#2563EB]/70 font-medium"
+								className="text-[8px] px-1 py-[1px] rounded bg-[#D4D0C8]/10 text-[#D4D0C8]/70 font-medium"
 							>
 								{tag}
 							</span>
@@ -265,7 +265,7 @@ function MarketplaceCard({
 					<Button
 						variant="ghost"
 						size="sm"
-						className="h-7 px-2.5 text-[11px] text-[#2563EB] hover:text-[#2563EB] hover:bg-[#2563EB]/10 font-medium gap-1"
+						className="h-7 px-2.5 text-[11px] text-[#D4D0C8] hover:text-[#D4D0C8] hover:bg-[#D4D0C8]/10 font-medium gap-1"
 						onClick={(e) => {
 							e.stopPropagation();
 							onInstall();
@@ -329,7 +329,9 @@ function ScreenshotGallery({ screenshots }: { screenshots: string[] }) {
 									key={i}
 									className={cn(
 										"w-1.5 h-1.5 rounded-full transition-colors",
-										i === index ? "bg-white" : "bg-white/30 hover:bg-foreground/50",
+										i === index
+											? "bg-white"
+											: "bg-white/30 hover:bg-foreground/50",
 									)}
 									onClick={() => setIndex(i)}
 								/>
@@ -387,7 +389,7 @@ function ExtensionDetailModal({
 				{/* Header */}
 				<div className="p-5 pb-4">
 					<div className="flex items-start gap-3.5">
-						<div className="flex-shrink-0 w-12 h-12 rounded-xl bg-gradient-to-br from-[#2563EB]/20 to-[#2563EB]/5 border border-foreground/10 flex items-center justify-center">
+						<div className="flex-shrink-0 w-12 h-12 rounded-xl bg-gradient-to-br from-[#D4D0C8]/20 to-[#D4D0C8]/5 border border-foreground/10 flex items-center justify-center">
 							{detail.source === "marketplace" && detail.ext.iconUrl ? (
 								<img
 									src={detail.ext.iconUrl}
@@ -398,7 +400,7 @@ function ExtensionDetailModal({
 								<ExtensionIcon
 									icon={isInstalled ? detail.ext.manifest.icon : undefined}
 									extensionPath={isInstalled ? detail.ext.path : undefined}
-									className="w-5 h-5 text-[#2563EB]/60"
+									className="w-5 h-5 text-[#D4D0C8]/60"
 								/>
 							)}
 						</div>
@@ -468,7 +470,7 @@ function ExtensionDetailModal({
 								{detail.ext.tags.map((tag) => (
 									<span
 										key={tag}
-										className="inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full bg-[#2563EB]/10 text-[#2563EB]/70 font-medium"
+										className="inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full bg-[#D4D0C8]/10 text-[#D4D0C8]/70 font-medium"
 									>
 										<Tag className="w-2.5 h-2.5" />
 										{tag}
@@ -534,7 +536,7 @@ function ExtensionDetailModal({
 					{detail.source === "marketplace" && !detail.ext.installed && onInstall && (
 						<Button
 							size="sm"
-							className="h-8 px-3 text-[12px] bg-[#2563EB] hover:bg-[#2563EB]/90 text-white gap-1.5"
+							className="h-8 px-3 text-[12px] bg-[#D4D0C8] hover:bg-[#E8E4DC] text-white gap-1.5"
 							onClick={onInstall}
 							disabled={isInstalling}
 						>
@@ -597,14 +599,16 @@ function TabSwitcher({
 							{isActive ? (
 								<motion.span
 									layoutId="extension-tab-pill"
-									className="absolute inset-0 rounded-lg bg-[#2563EB]"
+									className="absolute inset-0 rounded-lg bg-[#D4D0C8]"
 									transition={{ type: "spring", stiffness: 420, damping: 34 }}
 								/>
 							) : null}
 							<span
 								className={cn(
 									"relative z-10 flex items-center justify-center gap-1",
-									isActive ? "text-white" : "text-muted-foreground hover:text-foreground",
+									isActive
+										? "text-white"
+										: "text-muted-foreground hover:text-foreground",
 								)}
 							>
 								{t(option.labelKey)}
@@ -781,7 +785,7 @@ export default function ExtensionManager() {
 			<div className="flex-shrink-0 p-4 pb-3">
 				<div className="flex items-center justify-between mb-3">
 					<div className="flex items-center gap-2">
-						<Puzzle className="w-4 h-4 text-[#2563EB]" />
+						<Puzzle className="w-4 h-4 text-[#D4D0C8]" />
 						<h3 className="text-[13px] font-semibold text-foreground">{t("title")}</h3>
 					</div>
 					<div className="flex items-center gap-0.5">
@@ -952,7 +956,9 @@ function InstalledTab({
 					<Puzzle className="w-5 h-5 text-muted-foreground" />
 				</div>
 				<div className="text-center">
-					<p className="text-[13px] font-medium text-muted-foreground">{t("empty.title")}</p>
+					<p className="text-[13px] font-medium text-muted-foreground">
+						{t("empty.title")}
+					</p>
 					<p className="text-[11px] text-muted-foreground mt-1 leading-relaxed max-w-[200px]">
 						{t("empty.description")}
 					</p>
@@ -1055,7 +1061,7 @@ function BrowseTab({
 						e.stopPropagation();
 						if (e.key === "Enter") onSearch();
 					}}
-					className="w-full h-8 pl-8 pr-3 rounded-lg bg-foreground/[0.04] border border-foreground/[0.08] text-[12px] text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-[#2563EB]/50 focus:border-[#2563EB]/30 transition-colors"
+					className="w-full h-8 pl-8 pr-3 rounded-lg bg-foreground/[0.04] border border-foreground/[0.08] text-[12px] text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-[#D4D0C8]/50 focus:border-[#D4D0C8]/30 transition-colors"
 				/>
 			</div>
 

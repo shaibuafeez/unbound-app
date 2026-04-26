@@ -1,5 +1,3 @@
-import type { Range, Span } from "dnd-timeline";
-import { useTimelineContext } from "dnd-timeline";
 import {
 	Check,
 	CaretDown as ChevronDown,
@@ -11,6 +9,8 @@ import {
 	MagicWand as WandSparkles,
 	MagnifyingGlassPlus as ZoomIn,
 } from "@phosphor-icons/react";
+import type { Range, Span } from "dnd-timeline";
+import { useTimelineContext } from "dnd-timeline";
 import {
 	forwardRef,
 	type KeyboardEvent as ReactKeyboardEvent,
@@ -385,7 +385,7 @@ function PlaybackCursor({
 			}}
 		>
 			<div
-				className="absolute top-0 bottom-0 w-[2px] bg-[#2563EB] shadow-[0_0_10px_rgba(37,99,235,0.5)] cursor-ew-resize pointer-events-auto hover:shadow-[0_0_15px_rgba(37,99,235,0.7)] transition-shadow"
+				className="absolute top-0 bottom-0 w-[2px] bg-[#D4D0C8] shadow-[0_0_10px_rgba(212,208,200,0.4)] cursor-ew-resize pointer-events-auto hover:shadow-[0_0_15px_rgba(212,208,200,0.6)] transition-shadow"
 				style={{
 					[sideProperty]: `${offset}px`,
 				}}
@@ -398,7 +398,7 @@ function PlaybackCursor({
 					className="absolute -top-1 left-1/2 -translate-x-1/2 hover:scale-125 transition-transform"
 					style={{ width: "16px", height: "16px" }}
 				>
-					<div className="w-3 h-3 mx-auto mt-[2px] bg-[#2563EB] rotate-45 rounded-sm shadow-lg border border-foreground/20" />
+					<div className="w-3 h-3 mx-auto mt-[2px] bg-[#D4D0C8] rotate-45 rounded-sm shadow-lg border border-foreground/20" />
 				</div>
 				{isDragging && (
 					<div className="absolute -top-6 left-1/2 -translate-x-1/2 px-1.5 py-0.5 rounded bg-black/80 text-[10px] text-white/90 font-medium tabular-nums whitespace-nowrap border border-foreground/10 shadow-lg pointer-events-none">
@@ -519,7 +519,7 @@ function TimelineAxis({
 								className={cn(
 									"text-[10px] font-medium tabular-nums tracking-tight",
 									marker.time === currentTimeMs
-										? "text-[#2563EB]"
+										? "text-[#D4D0C8]"
 										: "text-foreground/40",
 								)}
 							>
@@ -1918,7 +1918,7 @@ const TimelineEditor = forwardRef<TimelineEditorHandle, TimelineEditorProps>(
 								onClick={handleAddZoom}
 								variant="ghost"
 								size="icon"
-								className="h-7 w-7 text-muted-foreground hover:text-[#2563EB] hover:bg-[#2563EB]/10 transition-all"
+								className="h-7 w-7 text-muted-foreground hover:text-[#D4D0C8] hover:bg-[#D4D0C8]/10 transition-all"
 								title="Add Zoom (Z)"
 							>
 								<ZoomIn className="w-4 h-4" />
@@ -1927,7 +1927,7 @@ const TimelineEditor = forwardRef<TimelineEditorHandle, TimelineEditorProps>(
 								onClick={handleSuggestZooms}
 								variant="ghost"
 								size="icon"
-								className="h-7 w-7 text-muted-foreground hover:text-[#2563EB] hover:bg-[#2563EB]/10 transition-all"
+								className="h-7 w-7 text-muted-foreground hover:text-[#D4D0C8] hover:bg-[#D4D0C8]/10 transition-all"
 								title="Suggest Zooms from Cursor"
 							>
 								<WandSparkles className="w-4 h-4" />
@@ -1986,7 +1986,7 @@ const TimelineEditor = forwardRef<TimelineEditorHandle, TimelineEditorProps>(
 										>
 											<span>{getAspectRatioLabel(ratio)}</span>
 											{aspectRatio === ratio && (
-												<Check className="w-3 h-3 text-[#2563EB]" />
+												<Check className="w-3 h-3 text-[#D4D0C8]" />
 											)}
 										</DropdownMenuItem>
 									))}
@@ -2003,7 +2003,7 @@ const TimelineEditor = forwardRef<TimelineEditorHandle, TimelineEditorProps>(
 												)
 											}
 											onKeyDown={handleCustomAspectRatioKeyDown}
-											className="w-12 h-7 rounded border border-foreground/10 bg-foreground/5 px-1.5 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-[#2563EB]"
+											className="w-12 h-7 rounded border border-foreground/10 bg-foreground/5 px-1.5 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-[#D4D0C8]"
 											aria-label="Custom aspect width"
 										/>
 										<span className="text-muted-foreground/70">:</span>
@@ -2017,7 +2017,7 @@ const TimelineEditor = forwardRef<TimelineEditorHandle, TimelineEditorProps>(
 												)
 											}
 											onKeyDown={handleCustomAspectRatioKeyDown}
-											className="w-12 h-7 rounded border border-foreground/10 bg-foreground/5 px-1.5 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-[#2563EB]"
+											className="w-12 h-7 rounded border border-foreground/10 bg-foreground/5 px-1.5 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-[#D4D0C8]"
 											aria-label="Custom aspect height"
 										/>
 										<Button
@@ -2029,7 +2029,7 @@ const TimelineEditor = forwardRef<TimelineEditorHandle, TimelineEditorProps>(
 											Set
 										</Button>
 										{isCustomAspectRatio(aspectRatio) && (
-											<Check className="w-3 h-3 text-[#2563EB] ml-auto" />
+											<Check className="w-3 h-3 text-[#D4D0C8] ml-auto" />
 										)}
 									</div>
 								</DropdownMenuContent>
@@ -2044,26 +2044,26 @@ const TimelineEditor = forwardRef<TimelineEditorHandle, TimelineEditorProps>(
 								<Crop className="w-3.5 h-3.5" />
 								<span className="font-medium">{t("sections.crop", "Crop")}</span>
 								{isCropped ? (
-									<span className="h-1.5 w-1.5 rounded-full bg-[#2563EB]" />
+									<span className="h-1.5 w-1.5 rounded-full bg-[#D4D0C8]" />
 								) : null}
 							</Button>
 						</div>
 						<div className="flex-1" />
 						<div className="flex items-center gap-4 text-[10px] text-muted-foreground/70 font-medium">
 							<span className="flex items-center gap-1.5">
-								<kbd className="px-1.5 py-0.5 bg-foreground/5 border border-foreground/10 rounded text-[#2563EB] font-sans">
+								<kbd className="px-1.5 py-0.5 bg-foreground/5 border border-foreground/10 rounded text-[#D4D0C8] font-sans">
 									Side Scroll
 								</kbd>
 								<span>Pan</span>
 							</span>
 							<span className="flex items-center gap-1.5">
-								<kbd className="px-1.5 py-0.5 bg-foreground/5 border border-foreground/10 rounded text-[#2563EB] font-sans">
+								<kbd className="px-1.5 py-0.5 bg-foreground/5 border border-foreground/10 rounded text-[#D4D0C8] font-sans">
 									{scrollLabels.pan}
 								</kbd>
 								<span>Pan</span>
 							</span>
 							<span className="flex items-center gap-1.5">
-								<kbd className="px-1.5 py-0.5 bg-foreground/5 border border-foreground/10 rounded text-[#2563EB] font-sans">
+								<kbd className="px-1.5 py-0.5 bg-foreground/5 border border-foreground/10 rounded text-[#D4D0C8] font-sans">
 									{scrollLabels.zoom}
 								</kbd>
 								<span>Zoom</span>

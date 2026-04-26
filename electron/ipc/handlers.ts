@@ -1,25 +1,26 @@
 import { BrowserWindow } from "electron";
-import {
-	windowsCaptureProcess,
-	setWindowsCaptureProcess,
-	setWindowsCaptureTargetPath,
-	setWindowsNativeCaptureActive,
-	setNativeScreenRecordingActive,
-	setWindowsCaptureStopRequested,
-	setWindowsCapturePaused,
-	setWindowsSystemAudioPath,
-	setWindowsMicAudioPath,
-	setWindowsPendingVideoPath,
-	selectedSource,
-} from "./state";
-import { registerSourceHandlers } from "./register/sources";
-import { registerRecordingHandlers } from "./register/recording";
-import { registerPermissionHandlers } from "./register/permissions";
+import { registerAiHandlers } from "./register/ai";
 import { registerAssetHandlers } from "./register/assets";
-import { registerExportHandlers } from "./register/export";
 import { registerCaptionHandlers } from "./register/captions";
+import { registerExportHandlers } from "./register/export";
+import { registerPermissionHandlers } from "./register/permissions";
 import { registerProjectHandlers } from "./register/project";
+import { registerRecordingHandlers } from "./register/recording";
 import { registerSettingsHandlers } from "./register/settings";
+import { registerSourceHandlers } from "./register/sources";
+import {
+	selectedSource,
+	setNativeScreenRecordingActive,
+	setWindowsCapturePaused,
+	setWindowsCaptureProcess,
+	setWindowsCaptureStopRequested,
+	setWindowsCaptureTargetPath,
+	setWindowsMicAudioPath,
+	setWindowsNativeCaptureActive,
+	setWindowsPendingVideoPath,
+	setWindowsSystemAudioPath,
+	windowsCaptureProcess,
+} from "./state";
 
 export { cleanupNativeVideoExportSessions } from "./export/native-video";
 
@@ -54,7 +55,11 @@ export function registerIpcHandlers(
 	getSourceSelectorWindow: () => BrowserWindow | null,
 	onRecordingStateChange?: (recording: boolean, sourceName: string) => void,
 ) {
-	registerSourceHandlers({ createEditorWindow, createSourceSelectorWindow, getSourceSelectorWindow });
+	registerSourceHandlers({
+		createEditorWindow,
+		createSourceSelectorWindow,
+		getSourceSelectorWindow,
+	});
 	registerRecordingHandlers(onRecordingStateChange);
 	registerPermissionHandlers();
 	registerAssetHandlers();
@@ -62,4 +67,5 @@ export function registerIpcHandlers(
 	registerCaptionHandlers();
 	registerProjectHandlers();
 	registerSettingsHandlers();
+	registerAiHandlers();
 }

@@ -62,7 +62,7 @@
 		"connectedZoomDuration": "Verbonden zoomduur",
 		"connectedZoomEasing": "Verbonden pancurve",
 		"zoomEasingOptions": {
-			"recordly": "Recordly",
+			"unbound": "Unbound",
 			"glide": "Glijden",
 			"smooth": "Vloeiend",
 			"snappy": "Pittig",

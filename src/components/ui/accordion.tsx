@@ -1,5 +1,5 @@
-import * as AccordionPrimitive from "@radix-ui/react-accordion";
 import { CaretDown as ChevronDown } from "@phosphor-icons/react";
+import * as AccordionPrimitive from "@radix-ui/react-accordion";
 import * as React from "react";
 
 import { cn } from "@/lib/utils";
@@ -12,7 +12,7 @@ const AccordionItem = React.forwardRef<
 >(({ className, ...props }, ref) => (
 	<AccordionPrimitive.Item
 		ref={ref}
-		className={cn("border-b border-foreground/5", className)}
+		className={cn("border-b border-white/[0.04]", className)}
 		{...props}
 	/>
 ));
@@ -32,7 +32,7 @@ const AccordionTrigger = React.forwardRef<
 			{...props}
 		>
 			{children}
-			<ChevronDown className="h-4 w-4 shrink-0 text-muted-foreground transition-transform duration-200" />
+			<ChevronDown className="h-4 w-4 shrink-0 text-[#666666] transition-transform duration-[250ms] ease-[cubic-bezier(0.16,1,0.3,1)]" />
 		</AccordionPrimitive.Trigger>
 	</AccordionPrimitive.Header>
 ));

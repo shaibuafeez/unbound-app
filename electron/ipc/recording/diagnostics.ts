@@ -1,10 +1,10 @@
 import { execFile } from "node:child_process";
 import fs from "node:fs/promises";
 import { promisify } from "node:util";
-import { getFfmpegBinaryPath } from "../ffmpeg/binary";
 import { COMPANION_AUDIO_LAYOUTS } from "../constants";
-import type { NativeCaptureDiagnostics, CompanionAudioCandidate } from "../types";
+import { getFfmpegBinaryPath } from "../ffmpeg/binary";
 import { lastNativeCaptureDiagnostics, setLastNativeCaptureDiagnostics } from "../state";
+import type { CompanionAudioCandidate, NativeCaptureDiagnostics } from "../types";
 
 const execFileAsync = promisify(execFile);
 

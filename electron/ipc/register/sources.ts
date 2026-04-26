@@ -2,17 +2,17 @@ import { execFile } from "node:child_process";
 import { promisify } from "node:util";
 import { app, BrowserWindow, desktopCapturer, ipcMain } from "electron";
 import { ALLOW_RECORDLY_WINDOW_CAPTURE } from "../constants";
+import {
+	getNativeMacWindowSources,
+	resolveLinuxWindowBounds,
+	resolveMacWindowBounds,
+	resolveWindowsWindowBounds,
+	stopWindowBoundsCapture,
+} from "../cursor/bounds";
+import { getDisplayBoundsForSource } from "../recording/ffmpeg";
 import { selectedSource, setSelectedSource } from "../state";
 import type { SelectedSource } from "../types";
 import { getScreen, parseWindowId } from "../utils";
-import { getDisplayBoundsForSource } from "../recording/ffmpeg";
-import {
-	getNativeMacWindowSources,
-	resolveMacWindowBounds,
-	resolveWindowsWindowBounds,
-	resolveLinuxWindowBounds,
-	stopWindowBoundsCapture,
-} from "../cursor/bounds";
 
 const execFileAsync = promisify(execFile);
 
@@ -76,7 +76,7 @@ export function registerSourceHandlers({
 		const ownWindowNames = new Set(
 			[
 				app.getName(),
-				"Recordly",
+				"Unbound",
 				...BrowserWindow.getAllWindows().flatMap((win) => {
 					const title = win.getTitle().trim();
 					return title ? [title] : [];
@@ -140,7 +140,7 @@ export function registerSourceHandlers({
 						return true;
 					}
 
-					if (ALLOW_RECORDLY_WINDOW_CAPTURE && normalizedName.includes("recordly")) {
+					if (ALLOW_RECORDLY_WINDOW_CAPTURE && normalizedName.includes("unbound")) {
 						return true;
 					}
 
@@ -191,8 +191,8 @@ export function registerSourceHandlers({
 
 					if (
 						ALLOW_RECORDLY_WINDOW_CAPTURE &&
-						(normalizedAppName === "recordly" ||
-							normalizedWindowName?.includes("recordly"))
+						(normalizedAppName === "unbound" ||
+							normalizedWindowName?.includes("unbound"))
 					) {
 						return true;
 					}
@@ -243,7 +243,7 @@ export function registerSourceHandlers({
 						return true;
 					}
 
-					if (ALLOW_RECORDLY_WINDOW_CAPTURE && normalizedName.includes("recordly")) {
+					if (ALLOW_RECORDLY_WINDOW_CAPTURE && normalizedName.includes("unbound")) {
 						return true;
 					}
 
@@ -439,47 +439,48 @@ body{background:transparent;overflow:hidden;width:100vw;height:100vh}
 </style></head><body>
 <div class="glow-wrap"></div>
 <div class="border-wrap"></div>
-</body></html>`
+</body></html>`;
 
 			try {
-				await highlightWin.loadURL(`data:text/html;charset=utf-8,${encodeURIComponent(html)}`)
+				await highlightWin.loadURL(
+					`data:text/html;charset=utf-8,${encodeURIComponent(html)}`,
+				);
 			} catch (loadError) {
 				if (!highlightWin.isDestroyed()) {
-					highlightWin.close()
+					highlightWin.close();
 				}
-				throw loadError
+				throw loadError;
 			}
 
-      setTimeout(() => {
-        if (!highlightWin.isDestroyed()) highlightWin.close()
-      }, 1700)
+			setTimeout(() => {
+				if (!highlightWin.isDestroyed()) highlightWin.close();
+			}, 1700);
 
-      return { success: true }
-    } catch (error) {
-      console.error('Failed to show source highlight:', error)
-      return { success: false }
-    }
-  })
+			return { success: true };
+		} catch (error) {
+			console.error("Failed to show source highlight:", error);
+			return { success: false };
+		}
+	});
 
-  ipcMain.handle('get-selected-source', () => {
-    return selectedSource
-  })
+	ipcMain.handle("get-selected-source", () => {
+		return selectedSource;
+	});
 
-  ipcMain.handle('open-source-selector', () => {
-    const sourceSelectorWin = getSourceSelectorWindow()
-    if (sourceSelectorWin) {
-      sourceSelectorWin.focus()
-      return
-    }
-    createSourceSelectorWindow()
-  })
-  ipcMain.handle('switch-to-editor', () => {
-    console.log('[switch-to-editor] Opening editor window')
-    const sourceSelectorWin = getSourceSelectorWindow()
-    if (sourceSelectorWin && !sourceSelectorWin.isDestroyed()) {
-      sourceSelectorWin.close()
-    }
-    createEditorWindow()
-  })
-
+	ipcMain.handle("open-source-selector", () => {
+		const sourceSelectorWin = getSourceSelectorWindow();
+		if (sourceSelectorWin) {
+			sourceSelectorWin.focus();
+			return;
+		}
+		createSourceSelectorWindow();
+	});
+	ipcMain.handle("switch-to-editor", () => {
+		console.log("[switch-to-editor] Opening editor window");
+		const sourceSelectorWin = getSourceSelectorWindow();
+		if (sourceSelectorWin && !sourceSelectorWin.isDestroyed()) {
+			sourceSelectorWin.close();
+		}
+		createEditorWindow();
+	});
 }
