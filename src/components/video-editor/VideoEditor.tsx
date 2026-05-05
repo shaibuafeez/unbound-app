@@ -203,7 +203,8 @@ type EditorHistorySnapshot = {
 
 type PendingExportSave = {
 	fileName: string;
-	arrayBuffer: ArrayBuffer;
+	arrayBuffer?: ArrayBuffer;
+	tempPath?: string;
 };
 
 type CancelableExporter = {
@@ -3738,7 +3739,14 @@ export default function VideoEditor() {
 		}
 
 		lastSourceAudioSyncTimeRef.current = currentTime;
-	}, [currentTime, dubbedAudioFallbackPath, duration, isPlaying, sourceAudioFallbackPaths, speedRegions]);
+	}, [
+		currentTime,
+		dubbedAudioFallbackPath,
+		duration,
+		isPlaying,
+		sourceAudioFallbackPaths,
+		speedRegions,
+	]);
 
 	const showExportSuccessToast = useCallback((filePath: string) => {
 		toast.success(`Exported successfully to ${filePath}`, {
@@ -4082,19 +4090,36 @@ export default function VideoEditor() {
 							? Math.round(performance.now() - smokeExportStartedAt)
 							: undefined;
 
-					if (result.success && result.blob) {
-						const arrayBuffer = await result.blob.arrayBuffer();
+					if (result.success && (result.blob || result.tempFilePath)) {
 						const timestamp = Date.now();
 						const fileName = `export-${timestamp}.mp4`;
 						markExportAsSaving();
 
-						const saveResult =
-							smokeExportConfig.enabled && smokeExportConfig.outputPath
-								? await window.electronAPI.writeExportedVideoToPath(
-										arrayBuffer,
-										smokeExportConfig.outputPath,
-									)
-								: await window.electronAPI.saveExportedVideo(arrayBuffer, fileName);
+						let saveResult: {
+							success: boolean;
+							path?: string;
+							message?: string;
+							canceled?: boolean;
+							tempPath?: string;
+						};
+						if (result.tempFilePath) {
+							saveResult = await window.electronAPI.finalizeExportedVideo(
+								result.tempFilePath,
+								fileName,
+							);
+						} else {
+							const arrayBuffer = await result.blob!.arrayBuffer();
+							saveResult =
+								smokeExportConfig.enabled && smokeExportConfig.outputPath
+									? await window.electronAPI.writeExportedVideoToPath(
+											arrayBuffer,
+											smokeExportConfig.outputPath,
+										)
+									: await window.electronAPI.saveExportedVideo(
+											arrayBuffer,
+											fileName,
+										);
+						}
 
 						if (saveResult.canceled) {
 							if (smokeExportConfig.enabled) {
@@ -4112,7 +4137,10 @@ export default function VideoEditor() {
 									metrics: result.metrics,
 								});
 							}
-							pendingExportSaveRef.current = { arrayBuffer, fileName };
+							pendingExportSaveRef.current = {
+								tempPath: saveResult.tempPath ?? result.tempFilePath,
+								fileName,
+							};
 							setHasPendingExportSave(true);
 							setExportError(
 								"Save dialog canceled. Click Save Again to save without re-rendering.",
@@ -4422,10 +4450,15 @@ export default function VideoEditor() {
 			return;
 		}
 
-		const saveResult = await window.electronAPI.saveExportedVideo(
-			pendingSave.arrayBuffer,
-			pendingSave.fileName,
-		);
+		const saveResult = pendingSave.tempPath
+			? await window.electronAPI.finalizeExportedVideo(
+					pendingSave.tempPath,
+					pendingSave.fileName,
+				)
+			: await window.electronAPI.saveExportedVideo(
+					pendingSave.arrayBuffer!,
+					pendingSave.fileName,
+				);
 
 		if (saveResult.canceled) {
 			setExportError("Save dialog canceled. Click Save Again to save without re-rendering.");

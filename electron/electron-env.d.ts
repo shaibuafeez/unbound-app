@@ -191,7 +191,7 @@ interface Window {
 			},
 		) => Promise<{
 			success: boolean;
-			data?: Uint8Array;
+			tempPath?: string;
 			encoderName?: string;
 			error?: string;
 		}>;
@@ -257,6 +257,17 @@ interface Window {
 		}>;
 		openScreenRecordingPreferences: () => Promise<{ success: boolean; error?: string }>;
 		openAccessibilityPreferences: () => Promise<{ success: boolean; error?: string }>;
+		finalizeExportedVideo: (
+			tempPath: string,
+			fileName: string,
+		) => Promise<{
+			success: boolean;
+			path?: string;
+			message?: string;
+			canceled?: boolean;
+			tempPath?: string;
+		}>;
+		discardExportedTemp: (tempPath: string) => Promise<{ success: boolean }>;
 		saveExportedVideo: (
 			videoData: ArrayBuffer,
 			fileName: string,
@@ -474,112 +485,52 @@ interface Window {
 		cancelCountdown: () => Promise<{ success: boolean }>;
 		getActiveCountdown: () => Promise<{ success: boolean; seconds: number | null }>;
 		onCountdownTick: (callback: (seconds: number) => void) => () => void;
-		// AI (0G Compute — Wallet-based)
-		getAiSettings: () => Promise<{
+		// AI (Huru)
+		getHuruSettings: () => Promise<{
 			success: boolean;
-			network: string;
-			selectedChatProvider: string;
-			selectedSttProvider: string;
-			walletAddress: string;
-			isInitialized: boolean;
-			hasPrivateKey: boolean;
+			hasApiKey: boolean;
+			consumerEmail: string;
+			baseUrl: string;
+			isConfigured: boolean;
 			error?: string;
 		}>;
-		saveAiSettings: (settings: {
-			network?: "testnet" | "mainnet";
-			selectedChatProvider?: string;
-			selectedSttProvider?: string;
+		saveHuruSettings: (settings: {
+			apiKey?: string;
+			consumerEmail?: string;
+			baseUrl?: string;
 		}) => Promise<{ success: boolean; error?: string }>;
-		generateAiWallet: () => Promise<{
-			success: boolean;
-			address?: string;
-			privateKey?: string;
-			error?: string;
-		}>;
-		initializeAiWallet: (options?: {
-			privateKey?: string;
-			network?: "testnet" | "mainnet";
-		}) => Promise<{
-			success: boolean;
-			walletAddress?: string;
-			networkChanged?: boolean;
-			error?: string;
-		}>;
-		logoutAiWallet: () => Promise<{
-			success: boolean;
-			network?: "testnet" | "mainnet";
-			error?: string;
-		}>;
-		getAiBalance: () => Promise<{
-			success: boolean;
-			totalBalance?: string;
-			availableBalance?: string;
-			lockedBalance?: string;
-			error?: string;
-		}>;
-		depositAiFunds: (options: { amount: number }) => Promise<{
-			success: boolean;
-			error?: string;
-		}>;
-		transferAiFunds: (options: { provider: string; amount: number }) => Promise<{
-			success: boolean;
-			error?: string;
-		}>;
-		listAiProviders: () => Promise<{
-			success: boolean;
-			chatbot: Array<{
-				provider: string;
-				model: string;
-				serviceType: string;
-				inputPrice?: string;
-				outputPrice?: string;
-				verifiability?: string;
-			}>;
-			stt: Array<{
-				provider: string;
-				model: string;
-				serviceType: string;
-				inputPrice?: string;
-				outputPrice?: string;
-				verifiability?: string;
-			}>;
-			error?: string;
-		}>;
-		testAiConnection: () => Promise<{ success: boolean; error?: string }>;
-		generateAiCaptions: (options: {
-			videoPath: string;
-			language?: string;
-			provider?: string;
-		}) => Promise<{
+		logoutHuru: () => Promise<{ success: boolean; error?: string }>;
+		generateAiCaptions: (options: { videoPath: string; language?: string }) => Promise<{
 			success: boolean;
 			cues?: AutoCaptionCue[];
 			message?: string;
 			error?: string;
+			checkoutUrl?: string;
 		}>;
 		translateAiCaptions: (options: {
 			cues: Array<{ id: string; startMs: number; endMs: number; text: string }>;
 			sourceLanguage: string;
 			targetLanguage: string;
-			provider?: string;
 		}) => Promise<{
 			success: boolean;
 			cues?: AutoCaptionCue[];
 			message?: string;
 			error?: string;
+			checkoutUrl?: string;
 		}>;
 		generateAiMetadata: (options: {
 			transcript: string;
 			type: "title" | "description" | "chapters";
-			provider?: string;
 		}) => Promise<{
 			success: boolean;
 			content?: string;
 			type?: string;
 			error?: string;
+			checkoutUrl?: string;
 		}>;
 		aiChat: (options: {
 			messages: Array<{ role: string; content: string }>;
-		}) => Promise<{ success: boolean; content?: string; error?: string }>;
+		}) => Promise<{ success: boolean; content?: string; error?: string; checkoutUrl?: string }>;
 		onAiChatStreamChunk: (callback: (payload: { content: string }) => void) => () => void;
 		onAiChatStreamDone: (
 			callback: (payload: { content: string; error?: string }) => void,

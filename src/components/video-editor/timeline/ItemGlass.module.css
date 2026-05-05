@@ -11,7 +11,7 @@
 
 .glassGreen:hover {
 	background: #242228;
-	border-color: rgba(255, 255, 255, 0.10);
+	border-color: rgba(255, 255, 255, 0.1);
 }
 
 .glassGreen.selected {
@@ -34,7 +34,7 @@
 
 .glassCyan:hover {
 	background: #222428;
-	border-color: rgba(255, 255, 255, 0.10);
+	border-color: rgba(255, 255, 255, 0.1);
 }
 
 .glassCyan.selected {
@@ -57,7 +57,7 @@
 
 .glassAmber:hover {
 	background: #282622;
-	border-color: rgba(255, 255, 255, 0.10);
+	border-color: rgba(255, 255, 255, 0.1);
 }
 
 .glassAmber.selected {
@@ -80,7 +80,7 @@
 
 .glassDarkGreen:hover {
 	background: #222824;
-	border-color: rgba(255, 255, 255, 0.10);
+	border-color: rgba(255, 255, 255, 0.1);
 }
 
 .glassDarkGreen.selected {
@@ -103,7 +103,7 @@
 
 .glassYellow:hover {
 	background: #282822;
-	border-color: rgba(255, 255, 255, 0.10);
+	border-color: rgba(255, 255, 255, 0.1);
 }
 
 .glassYellow.selected {
@@ -126,7 +126,7 @@
 
 .glassRed:hover {
 	background: #282222;
-	border-color: rgba(255, 255, 255, 0.10);
+	border-color: rgba(255, 255, 255, 0.1);
 }
 
 .glassRed.selected {
@@ -149,7 +149,7 @@
 
 .glassPurple:hover {
 	background: #242228;
-	border-color: rgba(255, 255, 255, 0.10);
+	border-color: rgba(255, 255, 255, 0.1);
 }
 
 .glassPurple.selected {
@@ -174,7 +174,7 @@
 	justify-content: center;
 	transform: translateY(-50%);
 	border-radius: 2px;
-	background: rgba(255, 255, 255, 0.50);
+	background: rgba(255, 255, 255, 0.5);
 	transition:
 		opacity 0.15s ease,
 		background 0.15s ease;

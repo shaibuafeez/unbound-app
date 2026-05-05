@@ -11,7 +11,28 @@ function isAbsoluteLocalPath(resource: string) {
 	);
 }
 
+function extractMediaServerPath(resource: string): string | null {
+	try {
+		const url = new URL(resource);
+		if (
+			url.hostname === "127.0.0.1" &&
+			url.pathname === "/video" &&
+			url.searchParams.has("path")
+		) {
+			return decodeURIComponent(url.searchParams.get("path")!);
+		}
+	} catch {
+		// Not a valid URL
+	}
+	return null;
+}
+
 function getLocalFilePath(resource: string) {
+	const mediaServerPath = extractMediaServerPath(resource);
+	if (mediaServerPath) {
+		return mediaServerPath;
+	}
+
 	if (/^file:\/\//i.test(resource)) {
 		return fromFileUrl(resource);
 	}
@@ -51,12 +72,19 @@ export async function resolveMediaElementSource(resource: string): Promise<{
 	src: string;
 	revoke: () => void;
 }> {
-	if (!resource || REMOTE_MEDIA_URL_PATTERN.test(resource)) {
+	if (!resource) {
+		return { src: resource, revoke: NOOP };
+	}
+
+	// Check for local media server URLs before treating as remote
+	const mediaServerPath = extractMediaServerPath(resource);
+	if (!mediaServerPath && REMOTE_MEDIA_URL_PATTERN.test(resource)) {
 		return { src: resource, revoke: NOOP };
 	}
 
 	const normalizedResource = getNormalizedResourceUrl(resource);
-	const localFilePath = getLocalFilePath(resource) ?? getLocalFilePath(normalizedResource);
+	const localFilePath =
+		mediaServerPath ?? getLocalFilePath(resource) ?? getLocalFilePath(normalizedResource);
 	if (!localFilePath || typeof window === "undefined" || !window.electronAPI?.readLocalFile) {
 		return { src: normalizedResource, revoke: NOOP };
 	}

@@ -62,6 +62,7 @@ export interface ExportMetrics {
 export interface ExportResult {
 	success: boolean;
 	blob?: Blob;
+	tempFilePath?: string;
 	filePath?: string;
 	error?: string;
 	metrics?: ExportMetrics;

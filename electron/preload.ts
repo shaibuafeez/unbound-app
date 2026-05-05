@@ -311,6 +311,12 @@ contextBridge.exposeInMainWorld("electronAPI", {
 	openAccessibilityPreferences: () => {
 		return ipcRenderer.invoke("open-accessibility-preferences");
 	},
+	finalizeExportedVideo: (tempPath: string, fileName: string) => {
+		return ipcRenderer.invoke("finalize-exported-video", tempPath, fileName);
+	},
+	discardExportedTemp: (tempPath: string) => {
+		return ipcRenderer.invoke("discard-exported-temp", tempPath);
+	},
 	saveExportedVideo: (videoData: ArrayBuffer, fileName: string) => {
 		return ipcRenderer.invoke("save-exported-video", videoData, fileName);
 	},
@@ -570,40 +576,21 @@ contextBridge.exposeInMainWorld("electronAPI", {
 		return () => ipcRenderer.removeListener("countdown-tick", listener);
 	},
 
-	// ── AI (0G Compute) ─────────────────────────────────────────────────
-	getAiSettings: () => ipcRenderer.invoke("get-ai-settings"),
-	saveAiSettings: (settings: {
-		network?: "testnet" | "mainnet";
-		selectedChatProvider?: string;
-		selectedSttProvider?: string;
-	}) => ipcRenderer.invoke("save-ai-settings", settings),
-	generateAiWallet: () => ipcRenderer.invoke("generate-ai-wallet"),
-	initializeAiWallet: (options?: { privateKey?: string; network?: "testnet" | "mainnet" }) =>
-		ipcRenderer.invoke("initialize-ai-wallet", options),
-	logoutAiWallet: () => ipcRenderer.invoke("logout-ai-wallet"),
-	getAiBalance: () => ipcRenderer.invoke("get-ai-balance"),
-	depositAiFunds: (options: { amount: number }) =>
-		ipcRenderer.invoke("deposit-ai-funds", options),
-	transferAiFunds: (options: { provider: string; amount: number }) =>
-		ipcRenderer.invoke("transfer-ai-funds", options),
-	listAiProviders: () => ipcRenderer.invoke("list-ai-providers"),
-	testAiConnection: () => ipcRenderer.invoke("test-ai-connection"),
-	generateAiCaptions: (options: {
-		videoPath: string;
-		language?: string;
-		provider?: string;
-	}) =>
+	// ── AI (Huru) ───────────────────────────────────────────────────────
+	getHuruSettings: () => ipcRenderer.invoke("get-huru-settings"),
+	saveHuruSettings: (settings: { apiKey?: string; consumerEmail?: string; baseUrl?: string }) =>
+		ipcRenderer.invoke("save-huru-settings", settings),
+	logoutHuru: () => ipcRenderer.invoke("logout-huru"),
+	generateAiCaptions: (options: { videoPath: string; language?: string }) =>
 		ipcRenderer.invoke("generate-ai-captions", options),
 	translateAiCaptions: (options: {
 		cues: Array<{ id: string; startMs: number; endMs: number; text: string }>;
 		sourceLanguage: string;
 		targetLanguage: string;
-		provider?: string;
 	}) => ipcRenderer.invoke("translate-ai-captions", options),
 	generateAiMetadata: (options: {
 		transcript: string;
 		type: "title" | "description" | "chapters";
-		provider?: string;
 	}) => ipcRenderer.invoke("generate-ai-metadata", options),
 	aiChat: (options: { messages: Array<{ role: string; content: string }> }) =>
 		ipcRenderer.invoke("ai-chat", options),

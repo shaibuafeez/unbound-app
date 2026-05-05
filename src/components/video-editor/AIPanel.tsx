@@ -5,12 +5,10 @@ import {
 	Copy,
 	GearSix,
 	Microphone,
-	ShieldCheck,
 	Sparkle,
 	SpeakerHigh,
 	Translate,
 	Trash,
-	Wallet,
 } from "@phosphor-icons/react";
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
@@ -55,15 +53,6 @@ interface AIPanelProps {
 	onDubbedAudioGenerated?: (dubbed: DubbedAudio) => void;
 	lipSyncVideoPath: string | null;
 	onLipSyncGenerated?: (result: LipSyncResult) => void;
-}
-
-interface ProviderInfo {
-	provider: string;
-	model: string;
-	serviceType: string;
-	inputPrice?: string;
-	outputPrice?: string;
-	verifiability?: string;
 }
 
 const MAX_VOICE_REFERENCE_MS = 8_000;
@@ -139,10 +128,6 @@ function selectVoiceReferenceWindow(cues: CaptionCue[]): { startMs: number; endM
 function buildDubGenerationCues(
 	cues: CaptionCue[],
 ): Array<{ startMs: number; endMs: number; text: string }> {
-	// Keep the original caption timing boundaries for cloned dubbing.
-	// Merging multiple cues into a larger phrase sounds smoother, but it also
-	// stretches spoken words across silent gaps and causes local drift against
-	// the source recording.
 	return cues
 		.filter(
 			(cue) =>
@@ -157,6 +142,17 @@ function buildDubGenerationCues(
 			text: cue.text.replace(/\s+/g, " ").trim(),
 		}))
 		.sort((left, right) => left.startMs - right.startMs);
+}
+
+function handleCheckoutUrl(checkoutUrl?: string) {
+	if (checkoutUrl) {
+		toast.error("Credits exhausted.", {
+			action: {
+				label: "Buy credits",
+				onClick: () => window.electronAPI.openExternalUrl(checkoutUrl),
+			},
+		});
+	}
 }
 
 export function AIPanel({
@@ -175,43 +171,14 @@ export function AIPanel({
 	lipSyncVideoPath,
 	onLipSyncGenerated,
 }: AIPanelProps) {
-	// Wallet state
-	const [privateKeyInput, setPrivateKeyInput] = useState("");
-	const [network, setNetwork] = useState<"mainnet" | "testnet">("mainnet");
-	const [walletAddress, setWalletAddress] = useState("");
-	const [isInitialized, setIsInitialized] = useState(false);
-	const [hasPrivateKey, setHasPrivateKey] = useState(false);
-	const [initLoading, setInitLoading] = useState(false);
-	const [initError, setInitError] = useState("");
+	// Huru settings state
+	const [apiKeyInput, setApiKeyInput] = useState("");
+	const [emailInput, setEmailInput] = useState("");
+	const [isConfigured, setIsConfigured] = useState(false);
+	const [consumerEmail, setConsumerEmail] = useState("");
+	const [setupLoading, setSetupLoading] = useState(false);
+	const [setupError, setSetupError] = useState("");
 	const [logoutLoading, setLogoutLoading] = useState(false);
-
-	// Generated wallet display
-	const [generatedWallet, setGeneratedWallet] = useState<{
-		address: string;
-		privateKey: string;
-	} | null>(null);
-
-	// Bumped on each successful initialization to trigger refetches
-	const [initEpoch, setInitEpoch] = useState(0);
-
-	// Balance state
-	const [totalBalance, setTotalBalance] = useState("");
-	const [availableBalance, setAvailableBalance] = useState("");
-
-	// Account actions
-	const [depositAmount, setDepositAmount] = useState("");
-	const [transferAmount, setTransferAmount] = useState("");
-	const [transferTarget, setTransferTarget] = useState("");
-	const [depositLoading, setDepositLoading] = useState(false);
-	const [transferLoading, setTransferLoading] = useState(false);
-
-	// Providers
-	const [chatProviders, setChatProviders] = useState<ProviderInfo[]>([]);
-	const [sttProviders, setSttProviders] = useState<ProviderInfo[]>([]);
-	const [selectedChatProvider, setSelectedChatProvider] = useState("");
-	const [selectedSttProvider, setSelectedSttProvider] = useState("");
-	const [providersLoading, setProvidersLoading] = useState(false);
-	const [providersError, setProvidersError] = useState("");
 
 	// Feature state
 	const [captionLoading, setCaptionLoading] = useState(false);
@@ -227,10 +194,6 @@ export function AIPanel({
 	const [targetLanguage, setTargetLanguage] = useState("es");
 	const [translationLoading, setTranslationLoading] = useState(false);
 	const [translationError, setTranslationError] = useState("");
-
-	// UX state
-	const [showImportSection, setShowImportSection] = useState(false);
-	const [backupDismissed, setBackupDismissed] = useState(false);
 
 	// LuxTTS / Dubbing state
 	const [luxTtsAvailable, setLuxTtsAvailable] = useState<boolean | null>(null);
@@ -254,14 +217,11 @@ export function AIPanel({
 
 	// Load settings on mount
 	useEffect(() => {
-		window.electronAPI.getAiSettings().then((result) => {
+		window.electronAPI.getHuruSettings().then((result) => {
 			if (result.success) {
-				setNetwork((result.network as "mainnet" | "testnet") || "mainnet");
-				setSelectedChatProvider(result.selectedChatProvider || "");
-				setSelectedSttProvider(result.selectedSttProvider || "");
-				setWalletAddress(result.walletAddress || "");
-				setIsInitialized(result.isInitialized);
-				setHasPrivateKey(result.hasPrivateKey);
+				setIsConfigured(result.isConfigured);
+
+				setConsumerEmail(result.consumerEmail || "");
 			}
 		});
 		window.electronAPI.checkLuxTtsAvailable().then((result) => {
@@ -306,257 +266,50 @@ export function AIPanel({
 		return cleanup;
 	}, []);
 
-	// Fetch balance when initialized (or re-initialized with new network)
-	// biome-ignore lint/correctness/useExhaustiveDependencies: initEpoch is an intentional refetch trigger
-	useEffect(() => {
-		if (!isInitialized) return;
-		window.electronAPI.getAiBalance().then((result) => {
-			if (result.success) {
-				setTotalBalance(result.totalBalance || "0");
-				setAvailableBalance(result.availableBalance || "0");
-			}
-		});
-	}, [isInitialized, initEpoch]);
-
-	// Fetch providers when initialized (or re-initialized with new network)
-	// biome-ignore lint/correctness/useExhaustiveDependencies: initEpoch is an intentional refetch trigger
-	useEffect(() => {
-		if (!isInitialized) {
-			setChatProviders([]);
-			setSttProviders([]);
-			setProvidersLoading(false);
-			setProvidersError("");
+	const saveSettings = useCallback(async () => {
+		if (!apiKeyInput || !emailInput) {
+			setSetupError("API key and email are required.");
 			return;
 		}
-
-		let cancelled = false;
-
-		const loadProviders = async () => {
-			setProvidersLoading(true);
-			setProvidersError("");
-
-			try {
-				const result = await Promise.race([
-					window.electronAPI.listAiProviders(),
-					new Promise<never>((_, reject) => {
-						window.setTimeout(() => {
-							reject(new Error("Provider lookup timed out. Try reconnecting."));
-						}, 12000);
-					}),
-				]);
-
-				if (cancelled) return;
-
-				if (!result.success) {
-					throw new Error(result.error || "Failed to load providers.");
-				}
-
-				const newChat = result.chatbot || [];
-				const newStt = result.stt || [];
-				setChatProviders(newChat);
-				setSttProviders(newStt);
-
-				// Clear selections that no longer exist in the refreshed lists.
-				const persistUpdates: {
-					selectedChatProvider?: string;
-					selectedSttProvider?: string;
-				} = {};
-
-				setSelectedChatProvider((prev) => {
-					if (prev && !newChat.some((p) => p.provider === prev)) {
-						persistUpdates.selectedChatProvider = "";
-						return "";
-					}
-					if (!prev && newChat.length > 0) {
-						persistUpdates.selectedChatProvider = newChat[0].provider;
-						return newChat[0].provider;
-					}
-					return prev;
-				});
-
-				setSelectedSttProvider((prev) => {
-					if (prev && !newStt.some((p) => p.provider === prev)) {
-						persistUpdates.selectedSttProvider = "";
-						return "";
-					}
-					if (!prev && newStt.length > 0) {
-						persistUpdates.selectedSttProvider = newStt[0].provider;
-						return newStt[0].provider;
-					}
-					return prev;
-				});
-
-				if (
-					persistUpdates.selectedChatProvider !== undefined ||
-					persistUpdates.selectedSttProvider !== undefined
-				) {
-					void window.electronAPI.saveAiSettings(persistUpdates);
-				}
-
-				if (newChat.length === 0 && newStt.length === 0) {
-					setProvidersError("No providers are currently available for this network.");
-				}
-			} catch (error) {
-				if (cancelled) return;
-				setChatProviders([]);
-				setSttProviders([]);
-				setProvidersError(
-					error instanceof Error ? error.message : "Failed to load providers.",
-				);
-			} finally {
-				if (!cancelled) {
-					setProvidersLoading(false);
-				}
-			}
-		};
-
-		void loadProviders();
-
-		return () => {
-			cancelled = true;
-		};
-	}, [isInitialized, initEpoch]);
-
-	// Reset transferTarget when it no longer matches either selected provider
-	useEffect(() => {
-		if (!transferTarget) return;
-		if (transferTarget !== selectedChatProvider && transferTarget !== selectedSttProvider) {
-			setTransferTarget("");
-		}
-	}, [selectedChatProvider, selectedSttProvider, transferTarget]);
-
-	const generateWallet = useCallback(async () => {
-		const result = await window.electronAPI.generateAiWallet();
-		if (result.success && result.address && result.privateKey) {
-			setGeneratedWallet({ address: result.address, privateKey: result.privateKey });
-			setPrivateKeyInput(result.privateKey);
-		}
-	}, []);
-
-	const initializeWallet = useCallback(async () => {
-		setInitLoading(true);
-		setInitError("");
+		setSetupLoading(true);
+		setSetupError("");
 		try {
-			// Key is validated + persisted only after successful broker init
-			const result = await window.electronAPI.initializeAiWallet({
-				privateKey: privateKeyInput || undefined,
-				network,
+			const result = await window.electronAPI.saveHuruSettings({
+				apiKey: apiKeyInput,
+				consumerEmail: emailInput,
 			});
-
 			if (result.success) {
-				setWalletAddress(result.walletAddress || "");
-				setIsInitialized(true);
-				setHasPrivateKey(true);
-				setPrivateKeyInput("");
-				setGeneratedWallet(null);
-				setInitEpoch((e) => e + 1);
-				// Clear stale provider selections when network changes
-				if (result.networkChanged) {
-					setSelectedChatProvider("");
-					setSelectedSttProvider("");
-					setTransferTarget("");
-				}
+				setIsConfigured(true);
+
+				setConsumerEmail(emailInput);
+				setApiKeyInput("");
 			} else {
-				setInitError(result.error || "Failed to initialize wallet");
+				setSetupError(result.error || "Failed to save settings.");
 			}
 		} finally {
-			setInitLoading(false);
+			setSetupLoading(false);
 		}
-	}, [privateKeyInput, network]);
+	}, [apiKeyInput, emailInput]);
 
-	const logoutWallet = useCallback(async () => {
+	const logout = useCallback(async () => {
 		setLogoutLoading(true);
-		setInitError("");
 		try {
-			const result = await window.electronAPI.logoutAiWallet();
+			const result = await window.electronAPI.logoutHuru();
 			if (result.success) {
-				setWalletAddress("");
-				setIsInitialized(false);
-				setHasPrivateKey(false);
-				setPrivateKeyInput("");
-				setGeneratedWallet(null);
-				setSelectedChatProvider("");
-				setSelectedSttProvider("");
-				setChatProviders([]);
-				setSttProviders([]);
-				setProvidersError("");
-				setTotalBalance("");
-				setAvailableBalance("");
-				setDepositAmount("");
-				setTransferAmount("");
-				setTransferTarget("");
-				setShowImportSection(true);
-				if (result.network) {
-					setNetwork(result.network);
-				}
-			} else {
-				setInitError(result.error || "Failed to log out wallet");
+				setIsConfigured(false);
+
+				setConsumerEmail("");
+				setApiKeyInput("");
+				setEmailInput("");
 			}
 		} finally {
 			setLogoutLoading(false);
 		}
 	}, []);
 
-	const refreshBalance = useCallback(async () => {
-		const result = await window.electronAPI.getAiBalance();
-		if (result.success) {
-			setTotalBalance(result.totalBalance || "0");
-			setAvailableBalance(result.availableBalance || "0");
-		}
-	}, []);
-
-	const handleDeposit = useCallback(async () => {
-		const amount = Number.parseFloat(depositAmount);
-		if (!amount || amount <= 0) return;
-		setDepositLoading(true);
-		try {
-			const result = await window.electronAPI.depositAiFunds({ amount });
-			if (result.success) {
-				setDepositAmount("");
-				await refreshBalance();
-			}
-		} finally {
-			setDepositLoading(false);
-		}
-	}, [depositAmount, refreshBalance]);
-
-	const handleTransfer = useCallback(async () => {
-		const amount = Number.parseFloat(transferAmount);
-		if (!amount || amount <= 0 || !transferTarget) return;
-		setTransferLoading(true);
-		try {
-			const result = await window.electronAPI.transferAiFunds({
-				provider: transferTarget,
-				amount,
-			});
-			if (result.success) {
-				setTransferAmount("");
-				await refreshBalance();
-			}
-		} finally {
-			setTransferLoading(false);
-		}
-	}, [transferAmount, transferTarget, refreshBalance]);
-
-	const handleChatProviderChange = useCallback(async (value: string) => {
-		setSelectedChatProvider(value);
-		await window.electronAPI.saveAiSettings({ selectedChatProvider: value });
-	}, []);
-
-	const handleSttProviderChange = useCallback(async (value: string) => {
-		setSelectedSttProvider(value);
-		await window.electronAPI.saveAiSettings({ selectedSttProvider: value });
-	}, []);
-
 	const generateCaptions = useCallback(async () => {
 		if (!videoPath) {
 			const message = "Record or import a video first.";
-			setCaptionError(message);
-			toast.error(message);
-			return;
-		}
-		if (!selectedSttProvider) {
-			const message = "Select a speech-to-text provider first.";
 			setCaptionError(message);
 			toast.error(message);
 			return;
@@ -568,36 +321,36 @@ export function AIPanel({
 			const result = await window.electronAPI.generateAiCaptions({
 				videoPath,
 				language: lang,
-				provider: selectedSttProvider,
 			});
 			if (result.success && result.cues) {
 				onCaptionsGenerated?.(result.cues, captionLanguage);
 				toast.success(result.message || `Generated ${result.cues.length} caption cue(s).`);
+			} else if (result.checkoutUrl) {
+				setCaptionError("Credits exhausted.");
+				toast.error("Credits exhausted.", {
+					action: {
+						label: "Buy credits",
+						onClick: () => window.electronAPI.openExternalUrl(result.checkoutUrl!),
+					},
+				});
 			} else {
-				const message = result.error || "AI caption generation failed.";
+				const message = result.error || "Caption generation failed.";
 				setCaptionError(message);
 				toast.error(message);
 			}
 		} catch (error) {
-			const message =
-				error instanceof Error ? error.message : "AI caption generation failed.";
+			const message = error instanceof Error ? error.message : "Caption generation failed.";
 			setCaptionError(message);
 			toast.error(message);
 		} finally {
 			setCaptionLoading(false);
 		}
-	}, [videoPath, selectedSttProvider, captionLanguage, onCaptionsGenerated]);
+	}, [videoPath, captionLanguage, onCaptionsGenerated]);
 
 	const translateCaptions = useCallback(async () => {
 		const sourceTrack = captionTracks.find((t) => t.isSource);
 		if (!sourceTrack) {
 			const message = "Generate captions first.";
-			setTranslationError(message);
-			toast.error(message);
-			return;
-		}
-		if (!selectedChatProvider) {
-			const message = "Select a chatbot provider first.";
 			setTranslationError(message);
 			toast.error(message);
 			return;
@@ -618,7 +371,6 @@ export function AIPanel({
 				cues: sourceTrack.cues,
 				sourceLanguage: sourceLangLabel,
 				targetLanguage: targetLangLabel,
-				provider: selectedChatProvider,
 			});
 			if (result.success && result.cues) {
 				const newTrack: CaptionTrack = {
@@ -631,9 +383,12 @@ export function AIPanel({
 				onTranslationGenerated?.(newTrack);
 				toast.success(result.message || `Translated ${result.cues.length} caption cue(s).`);
 			} else {
-				const message = result.error || "AI caption translation failed.";
-				setTranslationError(message);
-				toast.error(message);
+				handleCheckoutUrl(result.checkoutUrl);
+				if (!result.checkoutUrl) {
+					const message = result.error || "AI caption translation failed.";
+					setTranslationError(message);
+					toast.error(message);
+				}
 			}
 		} catch (error) {
 			const message =
@@ -643,7 +398,7 @@ export function AIPanel({
 		} finally {
 			setTranslationLoading(false);
 		}
-	}, [captionTracks, selectedChatProvider, targetLanguage, onTranslationGenerated]);
+	}, [captionTracks, targetLanguage, onTranslationGenerated]);
 
 	const cloneVoice = useCallback(async () => {
 		if (!videoPath) return;
@@ -742,64 +497,9 @@ export function AIPanel({
 		}
 	}, [videoPath, dubbedAudio, onLipSyncGenerated]);
 
-	// Available for individual metadata generation if needed
-	// @ts-expect-error kept for future per-field generation UI
-	const _generateMetadata = useCallback(
-		async (type: "title" | "description" | "chapters") => {
-			if (!transcript) {
-				const message = "Generate captions first.";
-				setMetadataError(message);
-				toast.error(message);
-				return;
-			}
-			if (!selectedChatProvider) {
-				const message = "Select a chatbot provider first.";
-				setMetadataError(message);
-				toast.error(message);
-				return;
-			}
-			setMetadataLoading(type);
-			setMetadataError("");
-			try {
-				const result = await window.electronAPI.generateAiMetadata({
-					transcript,
-					type,
-					provider: selectedChatProvider,
-				});
-				if (result.success && result.content) {
-					switch (type) {
-						case "title":
-							setGeneratedTitle(result.content);
-							break;
-						case "description":
-							setGeneratedDescription(result.content);
-							break;
-						case "chapters":
-							setGeneratedChapters(result.content);
-							break;
-					}
-					toast.success(`Generated ${type}.`);
-				} else {
-					const message = result.error || `Failed to generate ${type}.`;
-					setMetadataError(message);
-					toast.error(message);
-				}
-			} finally {
-				setMetadataLoading(null);
-			}
-		},
-		[selectedChatProvider, transcript],
-	);
-
 	const generateAllMetadata = useCallback(async () => {
 		if (!transcript) {
 			const message = "Generate captions first.";
-			setMetadataError(message);
-			toast.error(message);
-			return;
-		}
-		if (!selectedChatProvider) {
-			const message = "Select a chatbot provider first.";
 			setMetadataError(message);
 			toast.error(message);
 			return;
@@ -813,7 +513,6 @@ export function AIPanel({
 				const result = await window.electronAPI.generateAiMetadata({
 					transcript,
 					type,
-					provider: selectedChatProvider,
 				});
 				if (result.success && result.content) {
 					switch (type) {
@@ -828,9 +527,12 @@ export function AIPanel({
 							break;
 					}
 				} else {
-					const message = result.error || `Failed to generate ${type}.`;
-					setMetadataError(message);
-					toast.error(message);
+					handleCheckoutUrl(result.checkoutUrl);
+					if (!result.checkoutUrl) {
+						const message = result.error || `Failed to generate ${type}.`;
+						setMetadataError(message);
+						toast.error(message);
+					}
 					return;
 				}
 			}
@@ -838,29 +540,14 @@ export function AIPanel({
 		} finally {
 			setMetadataLoading(null);
 		}
-	}, [selectedChatProvider, transcript]);
+	}, [transcript]);
 
 	const copyToClipboard = useCallback((text: string) => {
 		navigator.clipboard.writeText(text);
 	}, []);
 
-	const truncateAddress = (addr: string) =>
-		addr ? `${addr.slice(0, 6)}...${addr.slice(-4)}` : "";
-
-	const formatBalance = (val: string) => {
-		const n = Number.parseFloat(val);
-		return Number.isNaN(n) ? "0.00" : n.toFixed(2);
-	};
-
-	const hasTransferTargets = Boolean(selectedChatProvider || selectedSttProvider);
-
-	const getModelForProvider = (address: string, list: ProviderInfo[]) => {
-		const found = list.find((p) => p.provider === address);
-		return found?.model || truncateAddress(address);
-	};
-
-	// ─── Not Connected ───────────────────────────────────────────
-	if (!isInitialized || !walletAddress) {
+	// ─── Not Configured ───────────────────────────────────────────
+	if (!isConfigured) {
 		return (
 			<section className="flex flex-col gap-3">
 				<p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
@@ -873,53 +560,32 @@ export function AIPanel({
 							Set up AI features
 						</span>
 						<span className="text-[10px] text-muted-foreground">
-							Create an AI account to unlock captions and metadata generation.
+							Enter your Huru API key and email to enable AI-powered translation and
+							metadata generation.
 						</span>
 					</div>
 
-					{/* Recovery key backup warning */}
-					{generatedWallet && !backupDismissed && (
-						<div className="flex flex-col gap-1.5 rounded-md bg-amber-500/10 p-2.5">
-							<div className="flex items-center justify-between">
-								<span className="text-[10px] font-semibold text-amber-600 dark:text-amber-400">
-									Save your recovery key
-								</span>
-								<Button
-									variant="ghost"
-									size="sm"
-									className="h-5 px-1.5 text-[9px] text-muted-foreground"
-									onClick={() => setBackupDismissed(true)}
-								>
-									Dismiss
-								</Button>
-							</div>
-							<span className="text-[10px] text-amber-600/80 dark:text-amber-400/80">
-								This key cannot be recovered. Copy it somewhere safe.
-							</span>
-							<div className="flex items-center gap-1.5 rounded bg-foreground/[0.05] px-2 py-1.5">
-								<span className="flex-1 break-all font-mono text-[10px] text-foreground">
-									{generatedWallet.privateKey}
-								</span>
-								<Button
-									variant="ghost"
-									size="sm"
-									className="h-6 w-6 shrink-0 p-0"
-									onClick={() => copyToClipboard(generatedWallet.privateKey)}
-								>
-									<Copy className="h-3.5 w-3.5" />
-								</Button>
-							</div>
-						</div>
-					)}
-
-					{/* Create New Account / Continue */}
-					{generatedWallet ? (
+					<div className="flex flex-col gap-2">
+						<Input
+							type="password"
+							value={apiKeyInput}
+							onChange={(e) => setApiKeyInput(e.target.value)}
+							placeholder="API key..."
+							className="h-8 text-xs font-mono"
+						/>
+						<Input
+							type="email"
+							value={emailInput}
+							onChange={(e) => setEmailInput(e.target.value)}
+							placeholder="Email address..."
+							className="h-8 text-xs"
+						/>
 						<Button
 							className="h-9 justify-start gap-2 bg-[#D4D0C8] text-[#0A0A0A] hover:bg-[#D4D0C8]/90"
-							onClick={initializeWallet}
-							disabled={initLoading}
+							onClick={saveSettings}
+							disabled={!apiKeyInput || !emailInput || setupLoading}
 						>
-							{initLoading ? (
+							{setupLoading ? (
 								<>
 									<CircleNotch className="h-4 w-4 animate-spin" />
 									Connecting...
@@ -927,94 +593,25 @@ export function AIPanel({
 							) : (
 								<>
 									<Sparkle className="h-4 w-4" weight="fill" />
-									Continue
+									Connect
 								</>
 							)}
 						</Button>
-					) : (
-						<Button
-							className="h-9 justify-start gap-2 bg-[#D4D0C8] text-[#0A0A0A] hover:bg-[#D4D0C8]/90"
-							onClick={generateWallet}
-						>
-							<Sparkle className="h-4 w-4" weight="fill" />
-							Create New Account
-						</Button>
-					)}
-
-					{/* Import existing key */}
-					<div className="flex flex-col gap-2">
-						<button
-							type="button"
-							className="flex items-center gap-1.5 text-[10px] text-muted-foreground hover:text-foreground transition-colors"
-							onClick={() => setShowImportSection(!showImportSection)}
-						>
-							<span
-								className="inline-block transition-transform duration-200"
-								style={{
-									transform: showImportSection ? "rotate(90deg)" : "rotate(0deg)",
-								}}
-							>
-								▸
-							</span>
-							I already have an account
-						</button>
-
-						{showImportSection && (
-							<div className="flex flex-col gap-2 pl-3">
-								<Input
-									type="password"
-									value={privateKeyInput}
-									onChange={(e) => setPrivateKeyInput(e.target.value)}
-									placeholder="Enter recovery key..."
-									className="h-8 text-xs font-mono"
-								/>
-								<div className="flex items-center gap-2">
-									<span className="text-[10px] text-muted-foreground">
-										Network:
-									</span>
-									<Select
-										value={network}
-										onValueChange={(v) =>
-											setNetwork(v as "mainnet" | "testnet")
-										}
-									>
-										<SelectTrigger className="h-8 w-28 text-xs">
-											<SelectValue />
-										</SelectTrigger>
-										<SelectContent>
-											<SelectItem value="mainnet">Mainnet</SelectItem>
-											<SelectItem value="testnet">Testnet</SelectItem>
-										</SelectContent>
-									</Select>
-								</div>
-								<Button
-									variant="outline"
-									className="h-8 text-xs"
-									onClick={initializeWallet}
-									disabled={(!privateKeyInput && !hasPrivateKey) || initLoading}
-								>
-									{initLoading ? (
-										<>
-											<CircleNotch className="mr-2 h-3.5 w-3.5 animate-spin" />
-											Connecting...
-										</>
-									) : (
-										"Connect"
-									)}
-								</Button>
-							</div>
-						)}
 					</div>
 
-					{initError && <span className="text-[10px] text-red-500">{initError}</span>}
+					<button
+						type="button"
+						className="text-[10px] text-muted-foreground hover:text-foreground transition-colors text-left"
+						onClick={() => window.electronAPI.openExternalUrl("https://huruai.xyz")}
+					>
+						Get an API key at huruai.xyz
+					</button>
+
+					{setupError && <span className="text-[10px] text-red-500">{setupError}</span>}
 				</div>
 
-				{/* Privacy badge */}
 				<div className="flex items-center gap-1.5 px-1">
-					<ShieldCheck className="h-3.5 w-3.5 text-green-500" weight="fill" />
-					<span className="text-[10px] text-muted-foreground">
-						Private, verified via TEE
-					</span>
+					<span className="text-[10px] text-muted-foreground">Powered by Huru</span>
 				</div>
 			</section>
 		);
@@ -1033,12 +630,7 @@ export function AIPanel({
 					<div className="h-2 w-2 rounded-full bg-green-500" />
 					<span className="text-[11px] font-medium text-foreground">Connected</span>
 				</div>
-				<div className="flex items-center gap-1.5">
-					<Wallet className="h-3.5 w-3.5 text-muted-foreground" />
-					<span className="text-[11px] font-mono text-foreground">
-						{formatBalance(totalBalance)} cr
-					</span>
-				</div>
+				<span className="text-[11px] text-muted-foreground">{consumerEmail}</span>
 			</div>
 
 			{/* Actions */}
@@ -1067,7 +659,7 @@ export function AIPanel({
 				<Button
 					className="h-9 justify-start gap-2 bg-[#D4D0C8] text-[#0A0A0A] hover:bg-[#D4D0C8]/90"
 					onClick={generateCaptions}
-					disabled={!videoPath || !selectedSttProvider || captionLoading}
+					disabled={!videoPath || captionLoading}
 				>
 					{captionLoading ? (
 						<CircleNotch className="h-4 w-4 animate-spin" />
@@ -1077,7 +669,7 @@ export function AIPanel({
 					Generate Captions
 				</Button>
 				<span className="text-[10px] text-muted-foreground -mt-1 ml-1">
-					{!videoPath ? "Record or import a video first" : "Uses speech-to-text AI"}
+					{!videoPath ? "Record or import a video first" : "Uses local Whisper"}
 				</span>
 				{captionError ? (
 					<span className="text-[10px] text-red-500 -mt-1 ml-1">{captionError}</span>
@@ -1086,7 +678,7 @@ export function AIPanel({
 				<Button
 					className="h-9 justify-start gap-2 bg-[#D4D0C8] text-[#0A0A0A] hover:bg-[#D4D0C8]/90"
 					onClick={generateAllMetadata}
-					disabled={!transcript || !selectedChatProvider || metadataLoading !== null}
+					disabled={!transcript || metadataLoading !== null}
 				>
 					{metadataLoading ? (
 						<CircleNotch className="h-4 w-4 animate-spin" />
@@ -1162,9 +754,7 @@ export function AIPanel({
 								className="h-8 text-xs gap-1.5"
 								onClick={translateCaptions}
 								disabled={
-									translationLoading ||
-									!selectedChatProvider ||
-									!captionTracks.some((t) => t.isSource)
+									translationLoading || !captionTracks.some((t) => t.isSource)
 								}
 							>
 								{translationLoading ? (
@@ -1428,345 +1018,65 @@ export function AIPanel({
 					</AccordionTrigger>
 					<AccordionContent className="pb-2 pt-0">
 						<div className="flex flex-col gap-3">
-							{/* AI Engine */}
-							<div className="flex flex-col gap-2">
-								<span className="text-[10px] font-medium text-muted-foreground">
-									AI Engine
-								</span>
-
-								{/* Chat provider */}
-								<div className="flex flex-col gap-1">
-									<span className="text-[10px] text-muted-foreground">Chat</span>
-									<Select
-										value={selectedChatProvider}
-										onValueChange={handleChatProviderChange}
-									>
-										<SelectTrigger className="h-8 text-xs">
-											<SelectValue
-												placeholder={
-													providersLoading
-														? "Loading..."
-														: chatProviders.length > 0
-															? "Select chat engine"
-															: "No chat engines available"
-												}
-											/>
-										</SelectTrigger>
-										<SelectContent>
-											{providersLoading ? (
-												<SelectItem
-													value="__chat_loading__"
-													className="text-xs"
-													disabled
-												>
-													Loading...
-												</SelectItem>
-											) : chatProviders.length > 0 ? (
-												chatProviders.map((p) => (
-													<SelectItem
-														key={p.provider}
-														value={p.provider}
-														className="text-xs"
-														textValue={p.model}
-													>
-														<div className="flex flex-col">
-															<span>{p.model}</span>
-															<span className="text-[9px] text-muted-foreground">
-																{truncateAddress(p.provider)}
-															</span>
-														</div>
-													</SelectItem>
-												))
-											) : (
-												<SelectItem
-													value="__chat_empty__"
-													className="text-xs"
-													disabled
-												>
-													No chat engines available
-												</SelectItem>
-											)}
-										</SelectContent>
-									</Select>
-								</div>
-
-								{/* STT provider */}
-								<div className="flex flex-col gap-1">
-									<span className="text-[10px] text-muted-foreground">
-										Speech
-									</span>
-									<Select
-										value={selectedSttProvider}
-										onValueChange={handleSttProviderChange}
-									>
-										<SelectTrigger className="h-8 text-xs">
-											<SelectValue
-												placeholder={
-													providersLoading
-														? "Loading..."
-														: sttProviders.length > 0
-															? "Select speech engine"
-															: "No speech engines available"
-												}
-											/>
-										</SelectTrigger>
-										<SelectContent>
-											{providersLoading ? (
-												<SelectItem
-													value="__stt_loading__"
-													className="text-xs"
-													disabled
-												>
-													Loading...
-												</SelectItem>
-											) : sttProviders.length > 0 ? (
-												sttProviders.map((p) => (
-													<SelectItem
-														key={p.provider}
-														value={p.provider}
-														className="text-xs"
-														textValue={p.model}
-													>
-														<div className="flex flex-col">
-															<span>{p.model}</span>
-															<span className="text-[9px] text-muted-foreground">
-																{truncateAddress(p.provider)}
-															</span>
-														</div>
-													</SelectItem>
-												))
-											) : (
-												<SelectItem
-													value="__stt_empty__"
-													className="text-xs"
-													disabled
-												>
-													No speech engines available
-												</SelectItem>
-											)}
-										</SelectContent>
-									</Select>
-								</div>
-
-								{providersError && (
-									<span className="text-[10px] text-red-500">
-										{providersError}
-									</span>
-								)}
+							<div className="flex items-center justify-between">
+								<span className="text-[10px] text-muted-foreground">Email</span>
+								<span className="text-[10px] text-foreground">{consumerEmail}</span>
 							</div>
 
-							{/* Network */}
-							<div className="flex flex-col gap-2">
-								<span className="text-[10px] font-medium text-muted-foreground">
-									Network
+							<div className="flex flex-col gap-1">
+								<span className="text-[10px] text-muted-foreground">
+									Update API key
 								</span>
-								<div className="flex items-center gap-2">
-									<Select
-										value={network}
-										onValueChange={(v) =>
-											setNetwork(v as "mainnet" | "testnet")
-										}
-									>
-										<SelectTrigger className="h-8 w-28 text-xs">
-											<SelectValue />
-										</SelectTrigger>
-										<SelectContent>
-											<SelectItem value="mainnet">Mainnet</SelectItem>
-											<SelectItem value="testnet">Testnet</SelectItem>
-										</SelectContent>
-									</Select>
-									<Button
-										variant="outline"
-										className="h-8 text-xs"
-										onClick={initializeWallet}
-										disabled={initLoading || logoutLoading}
-									>
-										{initLoading ? (
-											<CircleNotch className="h-3.5 w-3.5 animate-spin" />
-										) : (
-											"Reconnect"
-										)}
-									</Button>
-									<Button
-										variant="outline"
-										className="h-8 gap-1.5 text-xs text-red-500 hover:text-red-500"
-										onClick={logoutWallet}
-										disabled={initLoading || logoutLoading}
-									>
-										{logoutLoading ? (
-											<CircleNotch className="h-3.5 w-3.5 animate-spin" />
-										) : (
-											<Trash className="h-3.5 w-3.5" />
-										)}
-										Log out
-									</Button>
-								</div>
-								{initError && (
-									<span className="text-[10px] text-red-500">{initError}</span>
-								)}
-
-								<div className="flex items-center justify-between">
-									<span className="text-[10px] text-muted-foreground">
-										Balance
-									</span>
-									<span className="text-[11px] font-mono">
-										{formatBalance(totalBalance)} credits
-									</span>
-								</div>
-								<div className="flex items-center justify-between">
-									<span className="text-[10px] text-muted-foreground">
-										Available
-									</span>
-									<span className="text-[11px] font-mono">
-										{formatBalance(availableBalance)} credits
-									</span>
-								</div>
-							</div>
-
-							{/* Fund Management */}
-							<div className="flex flex-col gap-2">
-								<span className="text-[10px] font-medium text-muted-foreground">
-									Fund Management
-								</span>
-
-								{/* Deposit */}
 								<div className="flex gap-2">
 									<Input
-										type="number"
-										value={depositAmount}
-										onChange={(e) => setDepositAmount(e.target.value)}
-										placeholder="Amount"
-										className="h-8 text-xs flex-1"
-										min="0"
-										step="0.1"
+										type="password"
+										value={apiKeyInput}
+										onChange={(e) => setApiKeyInput(e.target.value)}
+										placeholder="New API key..."
+										className="h-8 text-xs font-mono flex-1"
 									/>
 									<Button
 										variant="outline"
 										className="h-8 text-xs"
-										onClick={handleDeposit}
-										disabled={depositLoading || !depositAmount}
+										onClick={async () => {
+											if (!apiKeyInput) return;
+											const result =
+												await window.electronAPI.saveHuruSettings({
+													apiKey: apiKeyInput,
+												});
+											if (result.success) {
+												setApiKeyInput("");
+												toast.success("API key updated.");
+											}
+										}}
+										disabled={!apiKeyInput}
 									>
-										{depositLoading ? (
-											<CircleNotch className="h-3.5 w-3.5 animate-spin" />
-										) : (
-											"Deposit"
-										)}
+										Save
 									</Button>
 								</div>
-
-								{/* Transfer to provider */}
-								<div className="flex flex-col gap-1.5">
-									<div className="flex gap-2">
-										<Select
-											value={transferTarget}
-											onValueChange={setTransferTarget}
-										>
-											<SelectTrigger className="h-8 text-xs flex-1">
-												<SelectValue
-													placeholder={
-														providersLoading
-															? "Loading..."
-															: hasTransferTargets
-																? "Select engine"
-																: "Select engines first"
-													}
-												/>
-											</SelectTrigger>
-											<SelectContent>
-												{providersLoading && (
-													<SelectItem
-														value="__providers_loading__"
-														className="text-xs"
-														disabled
-													>
-														Loading...
-													</SelectItem>
-												)}
-												{!providersLoading && !hasTransferTargets && (
-													<SelectItem
-														value="__providers_missing__"
-														className="text-xs"
-														disabled
-													>
-														Select a chat or speech engine first
-													</SelectItem>
-												)}
-												{!providersLoading && selectedChatProvider && (
-													<SelectItem
-														value={selectedChatProvider}
-														className="text-xs"
-													>
-														Chat:{" "}
-														{getModelForProvider(
-															selectedChatProvider,
-															chatProviders,
-														)}
-													</SelectItem>
-												)}
-												{!providersLoading &&
-													selectedSttProvider &&
-													selectedSttProvider !==
-														selectedChatProvider && (
-														<SelectItem
-															value={selectedSttProvider}
-															className="text-xs"
-														>
-															Speech:{" "}
-															{getModelForProvider(
-																selectedSttProvider,
-																sttProviders,
-															)}
-														</SelectItem>
-													)}
-											</SelectContent>
-										</Select>
-									</div>
-									<div className="flex gap-2">
-										<Input
-											type="number"
-											value={transferAmount}
-											onChange={(e) => setTransferAmount(e.target.value)}
-											placeholder="Amount"
-											className="h-8 text-xs flex-1"
-											min="0"
-											step="0.1"
-										/>
-										<Button
-											variant="outline"
-											className="h-8 text-xs"
-											onClick={handleTransfer}
-											disabled={
-												transferLoading ||
-												!transferAmount ||
-												!transferTarget
-											}
-										>
-											{transferLoading ? (
-												<CircleNotch className="h-3.5 w-3.5 animate-spin" />
-											) : (
-												"Transfer"
-											)}
-										</Button>
-									</div>
-								</div>
 							</div>
 
-							{/* Account */}
-							<div className="flex items-center justify-between">
-								<span className="text-[10px] text-muted-foreground">Account</span>
-								<span className="font-mono text-[10px] text-foreground">
-									{truncateAddress(walletAddress)}
-								</span>
-							</div>
+							<Button
+								variant="outline"
+								className="h-8 gap-1.5 text-xs text-red-500 hover:text-red-500"
+								onClick={logout}
+								disabled={logoutLoading}
+							>
+								{logoutLoading ? (
+									<CircleNotch className="h-3.5 w-3.5 animate-spin" />
+								) : (
+									<Trash className="h-3.5 w-3.5" />
+								)}
+								Log out
+							</Button>
 						</div>
 					</AccordionContent>
 				</AccordionItem>
 			</Accordion>
 
-			{/* Privacy badge */}
+			{/* Powered by badge */}
 			<div className="flex items-center gap-1.5 px-1">
-				<ShieldCheck className="h-3.5 w-3.5 text-green-500" weight="fill" />
-				<span className="text-[10px] text-muted-foreground">Private, verified via TEE</span>
+				<span className="text-[10px] text-muted-foreground">Powered by Huru</span>
 			</div>
 		</section>
 	);

@@ -261,13 +261,11 @@ export function registerExportHandlers() {
 					session.outputPath,
 					options ?? {},
 				);
-				const data = await fs.readFile(finalizedPath);
 				nativeVideoExportSessions.delete(sessionId);
-				await removeTemporaryExportFile(finalizedPath);
 
 				return {
 					success: true,
-					data: new Uint8Array(data),
+					tempPath: finalizedPath,
 					encoderName: session.encoderName,
 				};
 			} catch (error) {
@@ -336,6 +334,74 @@ export function registerExportHandlers() {
 		await session.completionPromise.catch(() => undefined);
 		await removeTemporaryExportFile(session.outputPath);
 		return { success: true };
+	});
+
+	ipcMain.handle("finalize-exported-video", async (event, tempPath: string, fileName: string) => {
+		try {
+			const resolvedTemp = path.resolve(tempPath);
+			const tempRoot = path.resolve(app.getPath("temp"));
+			if (
+				!resolvedTemp.startsWith(tempRoot + path.sep) &&
+				!resolvedTemp.startsWith(tempRoot)
+			) {
+				return { success: false, message: "Invalid temp path" };
+			}
+
+			const isGif = fileName.toLowerCase().endsWith(".gif");
+			const filters = isGif
+				? [{ name: "GIF Image", extensions: ["gif"] }]
+				: [{ name: "MP4 Video", extensions: ["mp4"] }];
+			const parentWindow = BrowserWindow.fromWebContents(event.sender);
+			const saveDialogOptions: SaveDialogOptions = {
+				title: isGif ? "Save Exported GIF" : "Save Exported Video",
+				defaultPath: path.join(app.getPath("downloads"), fileName),
+				filters,
+				properties: ["createDirectory", "showOverwriteConfirmation"],
+			};
+
+			const result = parentWindow
+				? await dialog.showSaveDialog(parentWindow, saveDialogOptions)
+				: await dialog.showSaveDialog(saveDialogOptions);
+
+			if (result.canceled || !result.filePath) {
+				return {
+					success: false,
+					canceled: true,
+					message: "Export canceled",
+					tempPath: resolvedTemp,
+				};
+			}
+
+			await fs.mkdir(path.dirname(result.filePath), { recursive: true });
+			try {
+				await fs.rename(resolvedTemp, result.filePath);
+			} catch {
+				await fs.copyFile(resolvedTemp, result.filePath);
+				await fs.rm(resolvedTemp, { force: true }).catch(() => undefined);
+			}
+
+			return { success: true, path: result.filePath, message: "Video exported successfully" };
+		} catch (error) {
+			console.error("Failed to finalize exported video:", error);
+			return {
+				success: false,
+				message: "Failed to save exported video",
+				error: String(error),
+			};
+		}
+	});
+
+	ipcMain.handle("discard-exported-temp", async (_, tempPath: string) => {
+		try {
+			const resolvedTemp = path.resolve(tempPath);
+			const tempRoot = path.resolve(app.getPath("temp"));
+			if (resolvedTemp.startsWith(tempRoot + path.sep) || resolvedTemp === tempRoot) {
+				await removeTemporaryExportFile(resolvedTemp);
+			}
+			return { success: true };
+		} catch {
+			return { success: true };
+		}
 	});
 
 	ipcMain.handle(

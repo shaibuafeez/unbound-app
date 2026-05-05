@@ -1008,18 +1008,16 @@ export class ModernVideoExporter {
 		}
 
 		this.encoderName = result.encoderName ?? this.encoderName;
-		if (!result.data) {
+		if (!result.tempPath) {
 			return {
 				success: false,
-				error: `${NATIVE_EXPORT_ENGINE_NAME} export did not return video data`,
+				error: `${NATIVE_EXPORT_ENGINE_NAME} export did not return a temp path`,
 			};
 		}
 
-		const videoBytes = result.data.slice();
-
 		return {
 			success: true,
-			blob: new Blob([videoBytes.buffer], { type: "video/mp4" }),
+			tempFilePath: result.tempPath,
 		};
 	}
 
@@ -1079,10 +1077,10 @@ export class ModernVideoExporter {
 			};
 		}
 
-		const videoBytes = result.data.slice();
+		const videoBytes = new Uint8Array(result.data);
 		return {
 			success: true,
-			blob: new Blob([videoBytes.buffer], { type: "video/mp4" }),
+			blob: new Blob([videoBytes], { type: "video/mp4" }),
 		};
 	}
 

@@ -3,12 +3,11 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import { promisify } from "node:util";
 import { app, type IpcMainInvokeEvent, ipcMain, safeStorage } from "electron";
-import { ethers } from "ethers";
-import { type ZGChatMessage, zgCompute } from "../../services/0g-compute";
+import { type HuruChatMessage, HuruPaymentError, huruClient } from "../../services/huru-client";
 import { lipSync } from "../../services/lip-sync";
 import { luxTts } from "../../services/lux-tts";
 import { extractCaptionAudioSource } from "../captions/generate";
-import { AI_SETTINGS_FILE, S3FD_MODEL_PATH, WAV2LIP_GAN_MODEL_PATH } from "../constants";
+import { HURU_SETTINGS_FILE, S3FD_MODEL_PATH, WAV2LIP_GAN_MODEL_PATH } from "../constants";
 import { getFfmpegBinaryPath } from "../ffmpeg/binary";
 import { buildAtempoFilters } from "../ffmpeg/filters";
 import {
@@ -20,19 +19,11 @@ import { normalizeVideoSourcePath } from "../utils";
 
 const execFileAsync = promisify(execFile);
 
-interface AiSettingsOnDisk {
-	encryptedPrivateKey?: string; // base64-encoded safeStorage ciphertext
-	privateKey?: string; // legacy plaintext — migrated on next save
-	network: "testnet" | "mainnet";
-	selectedChatProvider?: string;
-	selectedSttProvider?: string;
-}
-
-interface AiSettings {
-	privateKey: string;
-	network: "testnet" | "mainnet";
-	selectedChatProvider?: string;
-	selectedSttProvider?: string;
+interface HuruSettingsOnDisk {
+	encryptedApiKey?: string; // base64-encoded safeStorage ciphertext
+	apiKey?: string; // fallback if encryption unavailable
+	consumerEmail?: string;
+	baseUrl?: string;
 }
 
 function detectDubbedAudioExtension(buffer: Uint8Array): ".mp3" | ".wav" | ".m4a" {
@@ -63,63 +54,61 @@ function detectDubbedAudioExtension(buffer: Uint8Array): ".mp3" | ".wav" | ".m4a
 	return ".mp3";
 }
 
-function decryptKey(stored: AiSettingsOnDisk): string {
-	if (stored.encryptedPrivateKey) {
+function decryptHuruApiKey(stored: HuruSettingsOnDisk): string {
+	if (stored.encryptedApiKey) {
 		if (!safeStorage.isEncryptionAvailable()) {
-			// Encrypted data but no decryption capability — unreadable
 			return "";
 		}
-		const buf = Buffer.from(stored.encryptedPrivateKey, "base64");
+		const buf = Buffer.from(stored.encryptedApiKey, "base64");
 		return safeStorage.decryptString(buf);
 	}
-	// Plaintext field (legacy or environments without encryption)
-	return stored.privateKey ?? "";
+	return stored.apiKey ?? "";
 }
 
-async function loadAiSettings(): Promise<AiSettings | null> {
+async function loadHuruSettings(): Promise<HuruSettingsOnDisk | null> {
 	try {
-		const data = await fs.readFile(AI_SETTINGS_FILE, "utf-8");
-		const onDisk = JSON.parse(data) as AiSettingsOnDisk;
-		const privateKey = decryptKey(onDisk);
-		return {
-			privateKey,
-			network: onDisk.network,
-			selectedChatProvider: onDisk.selectedChatProvider,
-			selectedSttProvider: onDisk.selectedSttProvider,
-		};
+		const data = await fs.readFile(HURU_SETTINGS_FILE, "utf-8");
+		return JSON.parse(data) as HuruSettingsOnDisk;
 	} catch {
 		return null;
 	}
 }
 
-async function saveAiSettingsToDisk(settings: AiSettings): Promise<void> {
-	const dir = path.dirname(AI_SETTINGS_FILE);
+async function saveHuruSettingsToDisk(settings: {
+	apiKey?: string;
+	consumerEmail?: string;
+	baseUrl?: string;
+}): Promise<void> {
+	const dir = path.dirname(HURU_SETTINGS_FILE);
 	await fs.mkdir(dir, { recursive: true });
 
+	const existing = await loadHuruSettings();
 	const canEncrypt = safeStorage.isEncryptionAvailable();
-	const onDisk: AiSettingsOnDisk = {
-		// Use OS encryption when available; fall back to plaintext field otherwise
-		encryptedPrivateKey:
-			settings.privateKey && canEncrypt
-				? safeStorage.encryptString(settings.privateKey).toString("base64")
-				: undefined,
-		privateKey: settings.privateKey && !canEncrypt ? settings.privateKey : undefined,
-		network: settings.network,
-		selectedChatProvider: settings.selectedChatProvider,
-		selectedSttProvider: settings.selectedSttProvider,
+
+	// Only update fields that are explicitly provided
+	const apiKey =
+		settings.apiKey !== undefined ? settings.apiKey : decryptHuruApiKey(existing || {});
+	const consumerEmail =
+		settings.consumerEmail !== undefined
+			? settings.consumerEmail
+			: (existing?.consumerEmail ?? "");
+	const baseUrl = settings.baseUrl !== undefined ? settings.baseUrl : (existing?.baseUrl ?? "");
+
+	const onDisk: HuruSettingsOnDisk = {
+		encryptedApiKey:
+			apiKey && canEncrypt ? safeStorage.encryptString(apiKey).toString("base64") : undefined,
+		apiKey: apiKey && !canEncrypt ? apiKey : undefined,
+		consumerEmail: consumerEmail || undefined,
+		baseUrl: baseUrl || undefined,
 	};
-	await fs.writeFile(AI_SETTINGS_FILE, JSON.stringify(onDisk, null, 2), "utf-8");
+	await fs.writeFile(HURU_SETTINGS_FILE, JSON.stringify(onDisk, null, 2), "utf-8");
 }
 
-async function clearAiSettingsFromDisk(network: "testnet" | "mainnet" = "mainnet"): Promise<void> {
-	const dir = path.dirname(AI_SETTINGS_FILE);
-	await fs.mkdir(dir, { recursive: true });
-	const onDisk: AiSettingsOnDisk = {
-		network,
-		selectedChatProvider: undefined,
-		selectedSttProvider: undefined,
-	};
-	await fs.writeFile(AI_SETTINGS_FILE, JSON.stringify(onDisk, null, 2), "utf-8");
+function formatHuruError(error: unknown): { error: string; checkoutUrl?: string } {
+	if (error instanceof HuruPaymentError) {
+		return { error: error.message, checkoutUrl: error.checkoutUrl };
+	}
+	return { error: error instanceof Error ? error.message : String(error) };
 }
 
 function getMaterializedDubbedAudioDir() {
@@ -130,17 +119,17 @@ function getLipSyncOutputDir() {
 	return path.join(app.getPath("temp"), "unbound-lipsync-outputs");
 }
 
-// Auto-initialization promise so get-ai-settings can await it
-let autoInitPromise: Promise<void> | null = null;
-
 export function registerAiHandlers() {
-	// Attempt to initialize broker on startup from saved settings
-	autoInitPromise = loadAiSettings().then(async (settings) => {
-		if (settings?.privateKey) {
-			try {
-				await zgCompute.initialize(settings.privateKey, settings.network || "mainnet");
-			} catch (error) {
-				console.error("Failed to initialize 0G broker on startup:", error);
+	// Auto-configure huruClient from saved settings on startup
+	loadHuruSettings().then((stored) => {
+		if (stored) {
+			const apiKey = decryptHuruApiKey(stored);
+			if (apiKey && stored.consumerEmail) {
+				huruClient.configure({
+					apiKey,
+					consumerEmail: stored.consumerEmail,
+					baseUrl: stored.baseUrl,
+				});
 			}
 		}
 	});
@@ -149,60 +138,65 @@ export function registerAiHandlers() {
 	const luxTtsPath = path.resolve(app.getAppPath(), "..", "LuxTTS");
 	luxTts.setLuxTtsPath(luxTtsPath);
 
-	ipcMain.handle("get-ai-settings", async () => {
+	// ── Huru Settings ────────────────────────────────────────────────
+
+	ipcMain.handle("get-huru-settings", async () => {
 		try {
-			// Wait for auto-init to finish so isInitialized reflects reality
-			if (autoInitPromise) await autoInitPromise;
-			const settings = await loadAiSettings();
+			const stored = await loadHuruSettings();
+			if (!stored) {
+				return {
+					success: true,
+					hasApiKey: false,
+					consumerEmail: "",
+					baseUrl: "",
+					isConfigured: false,
+				};
+			}
+			const hasApiKey = Boolean(decryptHuruApiKey(stored));
 			return {
 				success: true,
-				network: settings?.network || "mainnet",
-				selectedChatProvider: settings?.selectedChatProvider || "",
-				selectedSttProvider: settings?.selectedSttProvider || "",
-				walletAddress: zgCompute.getWalletAddress() || "",
-				isInitialized: zgCompute.isInitialized(),
-				hasPrivateKey: Boolean(settings?.privateKey),
+				hasApiKey,
+				consumerEmail: stored.consumerEmail || "",
+				baseUrl: stored.baseUrl || "",
+				isConfigured: hasApiKey && Boolean(stored.consumerEmail),
 			};
 		} catch (error) {
 			return {
 				success: false,
-				network: "mainnet",
-				selectedChatProvider: "",
-				selectedSttProvider: "",
-				walletAddress: "",
-				isInitialized: false,
-				hasPrivateKey: false,
+				hasApiKey: false,
+				consumerEmail: "",
+				baseUrl: "",
+				isConfigured: false,
 				error: String(error),
 			};
 		}
 	});
 
 	ipcMain.handle(
-		"save-ai-settings",
+		"save-huru-settings",
 		async (
 			_,
 			settings: {
-				network?: "testnet" | "mainnet";
-				selectedChatProvider?: string;
-				selectedSttProvider?: string;
+				apiKey?: string;
+				consumerEmail?: string;
+				baseUrl?: string;
 			},
 		) => {
 			try {
-				// Private key is never accepted via save-ai-settings.
-				// It is only persisted through initialize-ai-wallet after validation.
-				const existing = (await loadAiSettings()) || {
-					privateKey: "",
-					network: "mainnet" as const,
-				};
-				const updated: AiSettings = {
-					privateKey: existing.privateKey,
-					network: settings.network ?? existing.network,
-					selectedChatProvider:
-						settings.selectedChatProvider ?? existing.selectedChatProvider,
-					selectedSttProvider:
-						settings.selectedSttProvider ?? existing.selectedSttProvider,
-				};
-				await saveAiSettingsToDisk(updated);
+				await saveHuruSettingsToDisk(settings);
+
+				// Re-configure the client with the updated settings
+				const stored = await loadHuruSettings();
+				if (stored) {
+					const apiKey = decryptHuruApiKey(stored);
+					if (apiKey && stored.consumerEmail) {
+						huruClient.configure({
+							apiKey,
+							consumerEmail: stored.consumerEmail,
+							baseUrl: stored.baseUrl,
+						});
+					}
+				}
 				return { success: true };
 			} catch (error) {
 				return { success: false, error: String(error) };
@@ -210,154 +204,29 @@ export function registerAiHandlers() {
 		},
 	);
 
-	ipcMain.handle("generate-ai-wallet", async () => {
+	ipcMain.handle("logout-huru", async () => {
 		try {
-			const wallet = ethers.Wallet.createRandom();
-			return { success: true, address: wallet.address, privateKey: wallet.privateKey };
-		} catch (error) {
-			return { success: false, error: String(error) };
-		}
-	});
-
-	ipcMain.handle(
-		"initialize-ai-wallet",
-		async (_, options?: { privateKey?: string; network?: "testnet" | "mainnet" }) => {
-			try {
-				let privateKey = options?.privateKey;
-				const network = options?.network ?? "mainnet";
-
-				if (!privateKey) {
-					const settings = await loadAiSettings();
-					if (!settings?.privateKey) {
-						return { success: false, error: "No private key configured." };
-					}
-					privateKey = settings.privateKey;
-				}
-
-				// Validate key format before doing anything — this throws on invalid hex
-				try {
-					new ethers.Wallet(privateKey);
-				} catch {
-					return {
-						success: false,
-						error: "Invalid private key format.",
-					};
-				}
-
-				// Initialize broker (connects to network)
-				await zgCompute.initialize(privateKey, network);
-
-				// Persist encrypted key + network AFTER success.
-				// Clear provider selections when network changes to avoid stale cross-network refs.
-				const existing = (await loadAiSettings()) || {
-					privateKey: "",
-					network: "mainnet" as const,
-				};
-				const networkChanged = existing.network !== network;
-				await saveAiSettingsToDisk({
-					privateKey,
-					network,
-					selectedChatProvider: networkChanged
-						? undefined
-						: existing.selectedChatProvider,
-					selectedSttProvider: networkChanged ? undefined : existing.selectedSttProvider,
-				});
-
-				return {
-					success: true,
-					walletAddress: zgCompute.getWalletAddress(),
-					networkChanged,
-				};
-			} catch (error) {
-				return { success: false, error: String(error) };
-			}
-		},
-	);
-
-	ipcMain.handle("logout-ai-wallet", async () => {
-		try {
-			const existing = await loadAiSettings();
-			await clearAiSettingsFromDisk(existing?.network ?? "mainnet");
-			zgCompute.reset();
-			return {
-				success: true,
-				network: existing?.network ?? "mainnet",
-			};
-		} catch (error) {
-			return {
-				success: false,
-				error: String(error),
-			};
-		}
-	});
-
-	ipcMain.handle("get-ai-balance", async () => {
-		try {
-			const balance = await zgCompute.getBalance();
-			return { success: true, ...balance };
-		} catch (error) {
-			return { success: false, error: String(error) };
-		}
-	});
-
-	ipcMain.handle("deposit-ai-funds", async (_, options: { amount: number }) => {
-		try {
-			await zgCompute.depositFunds(options.amount);
+			const dir = path.dirname(HURU_SETTINGS_FILE);
+			await fs.mkdir(dir, { recursive: true });
+			await fs.rm(HURU_SETTINGS_FILE, { force: true });
+			huruClient.reset();
 			return { success: true };
 		} catch (error) {
 			return { success: false, error: String(error) };
 		}
 	});
 
-	ipcMain.handle(
-		"transfer-ai-funds",
-		async (_, options: { provider: string; amount: number }) => {
-			try {
-				await zgCompute.transferToProvider(options.provider, options.amount);
-				return { success: true };
-			} catch (error) {
-				return { success: false, error: String(error) };
-			}
-		},
-	);
-
-	ipcMain.handle("list-ai-providers", async () => {
-		try {
-			const providers = await zgCompute.listProviders();
-			console.log(
-				`[list-ai-providers] chatbot: ${providers.chatbot.length}, stt: ${providers.stt.length}`,
-			);
-			return { success: true, ...providers };
-		} catch (error) {
-			console.error("[list-ai-providers] Error:", error);
-			return { success: false, error: String(error), chatbot: [], stt: [] };
-		}
-	});
-
-	ipcMain.handle("test-ai-connection", async () => {
-		try {
-			const result = await zgCompute.testConnection();
-			return result;
-		} catch (error) {
-			return { success: false, error: String(error) };
-		}
-	});
+	// ── AI Features (routed through Huru) ────────────────────────────
 
 	ipcMain.handle(
 		"generate-ai-captions",
-		async (
-			_,
-			options: { videoPath: string; language?: string; provider?: string },
-		) => {
+		async (_, options: { videoPath: string; language?: string }) => {
 			try {
-				if (!zgCompute.isInitialized()) {
-					return { success: false, error: "Wallet not initialized." };
-				}
-
-				const settings = await loadAiSettings();
-				const sttProvider = options.provider || settings?.selectedSttProvider;
-				if (!sttProvider) {
-					return { success: false, error: "No speech-to-text provider selected." };
+				if (!huruClient.isConfigured()) {
+					return {
+						success: false,
+						error: "Huru API not configured. Set up your API key and email.",
+					};
 				}
 
 				const ffmpegPath = getFfmpegBinaryPath();
@@ -379,13 +248,12 @@ export function registerAiHandlers() {
 						wavPath,
 					});
 
-					const result = await zgCompute.speechToText(
-						wavPath,
-						sttProvider,
-						options.language,
-					);
+					const audioBuffer = await fs.readFile(wavPath);
+					const blob = new Blob([audioBuffer], { type: "audio/wav" });
+					const fileName = path.basename(wavPath);
 
-					// Convert segments to caption cues
+					const result = await huruClient.speechToText(blob, fileName, options.language);
+
 					const cues = (result.segments || []).map((seg, i) => ({
 						id: `ai-cue-${i + 1}`,
 						startMs: Math.round(seg.start * 1000),
@@ -393,7 +261,6 @@ export function registerAiHandlers() {
 						text: seg.text.trim(),
 					}));
 
-					// If no segments but we have text, create a single cue
 					if (cues.length === 0 && result.text) {
 						cues.push({
 							id: "ai-cue-1",
@@ -406,20 +273,16 @@ export function registerAiHandlers() {
 					return {
 						success: true,
 						cues,
-						message: `Generated ${cues.length} caption cue${cues.length === 1 ? "" : "s"} via 0G AI.`,
+						message: `Generated ${cues.length} caption cue${cues.length === 1 ? "" : "s"} via Huru AI.`,
 					};
 				} finally {
-					// Cleanup temp wav file
 					await fs.unlink(wavPath).catch(() => {
 						// Ignore cleanup errors
 					});
 				}
 			} catch (error) {
 				console.error("Failed to generate AI captions:", error);
-				return {
-					success: false,
-					error: error instanceof Error ? error.message : String(error),
-				};
+				return { success: false, ...formatHuruError(error) };
 			}
 		},
 	);
@@ -432,18 +295,14 @@ export function registerAiHandlers() {
 				cues: Array<{ id: string; startMs: number; endMs: number; text: string }>;
 				sourceLanguage: string;
 				targetLanguage: string;
-				provider?: string;
 			},
 		) => {
 			try {
-				if (!zgCompute.isInitialized()) {
-					return { success: false, error: "Wallet not initialized." };
-				}
-
-				const settings = await loadAiSettings();
-				const chatProvider = options.provider || settings?.selectedChatProvider;
-				if (!chatProvider) {
-					return { success: false, error: "No chatbot provider selected." };
+				if (!huruClient.isConfigured()) {
+					return {
+						success: false,
+						error: "Huru API not configured. Set up your API key and email.",
+					};
 				}
 
 				const { cues, sourceLanguage, targetLanguage } = options;
@@ -467,13 +326,10 @@ export function registerAiHandlers() {
 
 					const systemPrompt = `You are a professional subtitle translator. Translate from ${sourceLanguage} to ${targetLanguage}. Preserve the [index] prefix on each line. Output ONLY translated lines, one per line, same count as input. Do not add explanations.`;
 
-					const result = await zgCompute.chatCompletion(
-						[
-							{ role: "system", content: systemPrompt },
-							{ role: "user", content: indexedLines },
-						],
-						chatProvider,
-					);
+					const result = await huruClient.chatCompletion([
+						{ role: "system", content: systemPrompt },
+						{ role: "user", content: indexedLines },
+					]);
 
 					const responseText = result.choices[0]?.message?.content || "";
 					const responseLines = responseText
@@ -499,10 +355,7 @@ export function registerAiHandlers() {
 				};
 			} catch (error) {
 				console.error("Failed to translate AI captions:", error);
-				return {
-					success: false,
-					error: error instanceof Error ? error.message : String(error),
-				};
+				return { success: false, ...formatHuruError(error) };
 			}
 		},
 	);
@@ -514,18 +367,14 @@ export function registerAiHandlers() {
 			options: {
 				transcript: string;
 				type: "title" | "description" | "chapters";
-				provider?: string;
 			},
 		) => {
 			try {
-				if (!zgCompute.isInitialized()) {
-					return { success: false, error: "Wallet not initialized." };
-				}
-
-				const settings = await loadAiSettings();
-				const chatProvider = options.provider || settings?.selectedChatProvider;
-				if (!chatProvider) {
-					return { success: false, error: "No chatbot provider selected." };
+				if (!huruClient.isConfigured()) {
+					return {
+						success: false,
+						error: "Huru API not configured. Set up your API key and email.",
+					};
 				}
 
 				const systemPrompt =
@@ -544,22 +393,16 @@ export function registerAiHandlers() {
 						break;
 				}
 
-				const result = await zgCompute.chatCompletion(
-					[
-						{ role: "system", content: systemPrompt },
-						{ role: "user", content: userPrompt },
-					],
-					chatProvider,
-				);
+				const result = await huruClient.chatCompletion([
+					{ role: "system", content: systemPrompt },
+					{ role: "user", content: userPrompt },
+				]);
 
 				const content = result.choices[0]?.message?.content || "";
 				return { success: true, content, type: options.type };
 			} catch (error) {
 				console.error("Failed to generate AI metadata:", error);
-				return {
-					success: false,
-					error: error instanceof Error ? error.message : String(error),
-				};
+				return { success: false, ...formatHuruError(error) };
 			}
 		},
 	);
@@ -600,8 +443,6 @@ export function registerAiHandlers() {
 					? Math.min(10_000, Math.max(1_500, requestedEndMs - requestedStartMs))
 					: 10_000;
 
-				// Extract a spoken reference clip when captions provide a window;
-				// otherwise fall back to the first 10 seconds of the recording.
 				const refDir = path.join(app.getPath("userData"), "voice-references");
 				await fs.mkdir(refDir, { recursive: true });
 				const refWavPath = path.join(
@@ -657,7 +498,6 @@ export function registerAiHandlers() {
 					return { success: false, error: "No cues to generate audio for." };
 				}
 
-				// Verify reference audio exists
 				try {
 					await fs.access(refWavPath);
 				} catch {
@@ -677,8 +517,6 @@ export function registerAiHandlers() {
 				const tempFiles = cues.map((_, i) => path.join(tempDir, `cue_${i}.wav`));
 
 				try {
-					// Generate all TTS in a single batch (model loaded once,
-					// reference audio auto-transcribed via Whisper)
 					const generatedCueAudio = await luxTts.batchTextToSpeech({
 						promptWavPath: refWavPath,
 						cues: cues.map((cue, i) => ({
@@ -697,7 +535,6 @@ export function registerAiHandlers() {
 						]),
 					);
 
-					// Fit each TTS segment back into its caption window, then stitch.
 					const outputFile = path.join(tempDir, "dubbed_output.mp3");
 					const inputs: string[] = [];
 					const filterParts: string[] = [];
@@ -759,7 +596,6 @@ export function registerAiHandlers() {
 						),
 					};
 				} finally {
-					// Cleanup temp directory (not ref audio — that persists)
 					await fs.rm(tempDir, { recursive: true, force: true }).catch(() => {
 						// Ignore cleanup errors
 					});
@@ -891,7 +727,6 @@ export function registerAiHandlers() {
 					};
 				}
 
-				// Materialize dubbed audio ArrayBuffer → temp WAV via FFmpeg
 				const outputDir = getLipSyncOutputDir();
 				await fs.mkdir(outputDir, { recursive: true });
 				const uid = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
@@ -900,10 +735,8 @@ export function registerAiHandlers() {
 				const rawOutputPath = path.join(outputDir, `lipsync-raw-${uid}.avi`);
 				const finalOutputPath = path.join(outputDir, `lipsync-${uid}.mp4`);
 
-				// Write raw audio data to disk
 				await fs.writeFile(tempRawAudioPath, Buffer.from(dubbedAudioData));
 
-				// Convert to WAV (16kHz mono) via FFmpeg
 				const ffmpeg = getFfmpegBinaryPath();
 				await execFileAsync(ffmpeg, [
 					"-y",
@@ -919,7 +752,6 @@ export function registerAiHandlers() {
 				]);
 				await fs.rm(tempRawAudioPath, { force: true });
 
-				// Run Wav2Lip
 				await lipSync.runLipSync({
 					videoPath,
 					audioPath: tempAudioPath,
@@ -931,7 +763,6 @@ export function registerAiHandlers() {
 					},
 				});
 
-				// Re-encode via FFmpeg (libx264, crf 18) + mux with dubbed audio
 				await execFileAsync(ffmpeg, [
 					"-y",
 					"-i",
@@ -952,7 +783,6 @@ export function registerAiHandlers() {
 					finalOutputPath,
 				]);
 
-				// Cleanup intermediates
 				await fs.rm(tempAudioPath, { force: true }).catch(() => undefined);
 				await fs.rm(rawOutputPath, { force: true }).catch(() => undefined);
 
@@ -990,23 +820,17 @@ export function registerAiHandlers() {
 
 	ipcMain.handle(
 		"ai-chat",
-		async (event: IpcMainInvokeEvent, options: { messages: ZGChatMessage[] }) => {
+		async (event: IpcMainInvokeEvent, options: { messages: HuruChatMessage[] }) => {
 			try {
-				if (!zgCompute.isInitialized()) {
-					return { success: false, error: "Wallet not initialized." };
-				}
-
-				const settings = await loadAiSettings();
-				const chatProvider = settings?.selectedChatProvider;
-				if (!chatProvider) {
-					return { success: false, error: "No chatbot provider selected." };
+				if (!huruClient.isConfigured()) {
+					return {
+						success: false,
+						error: "Huru API not configured. Set up your API key and email.",
+					};
 				}
 
 				let fullContent = "";
-				for await (const chunk of zgCompute.chatCompletionStream(
-					options.messages,
-					chatProvider,
-				)) {
+				for await (const chunk of huruClient.chatCompletionStream(options.messages)) {
 					const delta = chunk.choices[0]?.delta?.content || "";
 					if (delta) {
 						fullContent += delta;
@@ -1017,9 +841,9 @@ export function registerAiHandlers() {
 				return { success: true, content: fullContent };
 			} catch (error) {
 				console.error("AI chat error:", error);
-				const errorMsg = error instanceof Error ? error.message : String(error);
-				event.sender.send("ai-chat-stream-done", { content: "", error: errorMsg });
-				return { success: false, error: errorMsg };
+				const formatted = formatHuruError(error);
+				event.sender.send("ai-chat-stream-done", { content: "", error: formatted.error });
+				return { success: false, ...formatted };
 			}
 		},
 	);

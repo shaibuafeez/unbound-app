@@ -39,6 +39,20 @@ export class ForwardFrameSource {
 	private frameTimelineOffsetUs = 0;
 
 	private toLocalFilePath(resourceUrl: string): string | null {
+		// Handle media server URLs (http://127.0.0.1:<port>/video?path=...)
+		try {
+			const url = new URL(resourceUrl);
+			if (
+				url.hostname === "127.0.0.1" &&
+				url.pathname === "/video" &&
+				url.searchParams.has("path")
+			) {
+				return decodeURIComponent(url.searchParams.get("path")!);
+			}
+		} catch {
+			// Not a valid URL, continue with other checks
+		}
+
 		if (!resourceUrl.startsWith("file:")) {
 			return null;
 		}

@@ -33,9 +33,7 @@ export const COMPANION_AUDIO_LAYOUTS = [
 ];
 
 export const AI_SETTINGS_FILE = path.join(USER_DATA_PATH, "ai-settings.json");
-
-export const ZG_RPC_MAINNET = "https://evmrpc.0g.ai";
-export const ZG_RPC_TESTNET = "https://evmrpc-testnet.0g.ai";
+export const HURU_SETTINGS_FILE = path.join(USER_DATA_PATH, "huru-settings.json");
 
 export const CURSOR_TELEMETRY_VERSION = 2;
 export const CURSOR_SAMPLE_INTERVAL_MS = 33;

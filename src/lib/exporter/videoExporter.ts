@@ -720,19 +720,16 @@ export class VideoExporter {
 			"native export finalization",
 		);
 
-		if (!result.success || !result.data) {
+		if (!result.success || !result.tempPath) {
 			return {
 				success: false,
 				error: result.error || "Failed to finalize native video export",
 			};
 		}
 
-		const blobData = new Uint8Array(result.data.byteLength);
-		blobData.set(result.data);
-
 		return {
 			success: true,
-			blob: new Blob([blobData.buffer], { type: "video/mp4" }),
+			tempFilePath: result.tempPath,
 		};
 	}
 
