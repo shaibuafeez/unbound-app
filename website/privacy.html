@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Privacy Policy — Unbound</title>
+  <meta name="description" content="Unbound privacy policy. No data collection, no tracking, no accounts." />
+  <meta name="theme-color" content="#0a0a0a" />
+  <link rel="icon" type="image/svg+xml" href="favicon.svg" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --bg: #050505;
+      --surface: #0a0a0a;
+      --surface-2: #111111;
+      --surface-3: #1a1a1a;
+      --border: #1e1e1e;
+      --border-2: #2a2a2a;
+      --text: #e8e8e8;
+      --text-secondary: #888888;
+      --text-tertiary: #555555;
+      --font: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+      --mono: 'JetBrains Mono', monospace;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: var(--font);
+      background: var(--bg);
+      color: var(--text);
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      line-height: 1.6;
+    }
+
+    ::selection {
+      background: rgba(255, 255, 255, 0.15);
+      color: #fff;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      opacity: 0.025;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+      pointer-events: none;
+      z-index: 9999;
+    }
+
+    .container {
+      max-width: 720px;
+      margin: 0 auto;
+      padding: 0 24px;
+    }
+
+    /* ── Nav (simplified) ─────────────────────────── */
+    nav {
+      padding: 20px 0;
+      border-bottom: 1px solid var(--border);
+    }
+    nav .container {
+      max-width: 1120px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .nav-logo {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      text-decoration: none;
+      color: var(--text);
+    }
+    .nav-logo svg { width: 24px; height: 24px; }
+    .nav-logo span { font-weight: 600; font-size: 14px; letter-spacing: -0.03em; }
+    .nav-back {
+      color: var(--text-secondary);
+      text-decoration: none;
+      font-size: 13px;
+      font-weight: 450;
+      transition: color 0.2s;
+    }
+    .nav-back:hover { color: var(--text); }
+
+    /* ── Content ───────────────────────────────────── */
+    .page-header {
+      padding: 80px 0 40px;
+      border-bottom: 1px solid var(--border);
+    }
+    .page-header h1 {
+      font-size: 36px;
+      font-weight: 800;
+      letter-spacing: -0.04em;
+      color: #fff;
+      margin-bottom: 8px;
+    }
+    .page-header .updated {
+      font-size: 13px;
+      color: var(--text-tertiary);
+      font-family: var(--mono);
+    }
+
+    .content {
+      padding: 48px 0 120px;
+    }
+    .content h2 {
+      font-size: 18px;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      color: #fff;
+      margin: 40px 0 12px;
+    }
+    .content h2:first-child {
+      margin-top: 0;
+    }
+    .content p {
+      font-size: 15px;
+      color: var(--text-secondary);
+      line-height: 1.75;
+      margin-bottom: 16px;
+    }
+    .content ul {
+      list-style: none;
+      margin-bottom: 16px;
+    }
+    .content li {
+      font-size: 15px;
+      color: var(--text-secondary);
+      line-height: 1.75;
+      padding-left: 20px;
+      position: relative;
+    }
+    .content li::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 11px;
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      background: var(--text-tertiary);
+    }
+    .content a {
+      color: var(--text);
+      text-decoration: underline;
+      text-underline-offset: 2px;
+      transition: color 0.2s;
+    }
+    .content a:hover { color: #fff; }
+    .content strong {
+      color: var(--text);
+      font-weight: 600;
+    }
+
+    /* ── Footer ────────────────────────────────────── */
+    footer {
+      padding: 48px 0;
+      border-top: 1px solid var(--border);
+    }
+    footer .container {
+      max-width: 1120px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .footer-left {
+      font-size: 13px;
+      color: var(--text-tertiary);
+      letter-spacing: -0.01em;
+    }
+    .footer-left a {
+      color: var(--text-secondary);
+      text-decoration: none;
+    }
+    .footer-links {
+      display: flex;
+      gap: 24px;
+      list-style: none;
+    }
+    .footer-links a {
+      color: var(--text-tertiary);
+      text-decoration: none;
+      font-size: 13px;
+      transition: color 0.2s;
+    }
+    .footer-links a:hover { color: var(--text-secondary); }
+
+    @media (max-width: 768px) {
+      .page-header { padding: 60px 0 32px; }
+      .page-header h1 { font-size: 28px; }
+      footer .container { flex-direction: column; gap: 16px; }
+    }
+  </style>
+</head>
+<body>
+
+  <nav>
+    <div class="container">
+      <a href="index.html" class="nav-logo">
+        <svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M16 4H9a5 5 0 00-5 5v14a5 5 0 005 5h14a5 5 0 005-5v-7" stroke="#fff" stroke-width="2.2" stroke-linecap="round"/><path d="M13.5 11.5l7 4.5-7 4.5v-9z" fill="#fff"/></svg>
+        <span>Unbound</span>
+      </a>
+      <a href="index.html" class="nav-back">&larr; Back to home</a>
+    </div>
+  </nav>
+
+  <div class="container">
+    <div class="page-header">
+      <h1>Privacy Policy</h1>
+      <span class="updated">Last updated: May 5, 2026</span>
+    </div>
+
+    <div class="content">
+      <h2>The short version</h2>
+      <p>Unbound does not collect, store, or transmit any of your personal data. There are no accounts, no analytics, no crash reports, no cookies, and no tracking of any kind.</p>
+
+      <h2>Data we collect</h2>
+      <p>None. Unbound runs entirely on your machine. We have no servers that receive data from the app, and no telemetry of any kind is built into the software.</p>
+
+      <h2>AI features</h2>
+      <p>Unbound includes optional AI-powered features: auto-captions, translation, AI chat, and voice dubbing. When you choose to use these features, data is sent to <strong>Huru</strong> (huruai.xyz) and/or the <strong>0G Compute Network</strong> for processing. Specifically:</p>
+      <ul>
+        <li>Auto-captions and translation send audio or text to Huru's API for transcription and translation.</li>
+        <li>AI chat sends your messages to Huru's language model API.</li>
+        <li>Voice dubbing sends audio to Huru for speech synthesis.</li>
+      </ul>
+      <p>These features are entirely opt-in. If you don't use them, no data leaves your machine. When you do use them, data is sent only to the providers listed above and is subject to their respective privacy policies.</p>
+
+      <h2>Local processing</h2>
+      <p>The following features are processed entirely on your device with no network requests:</p>
+      <ul>
+        <li>Screen recording and video editing</li>
+        <li>Voice cloning (voice profile extraction)</li>
+        <li>Lip sync (Wav2Lip)</li>
+        <li>Cursor effects, auto-zoom, backgrounds, and export</li>
+      </ul>
+
+      <h2>Accounts and authentication</h2>
+      <p>Unbound does not require an account. There is no sign-up, no login, and no user profiles. If you connect a wallet for 0G Compute features, that interaction is between you and the 0G network — Unbound does not store your wallet address or keys.</p>
+
+      <h2>Cookies and tracking</h2>
+      <p>Unbound uses zero cookies. This website does not use analytics, tracking pixels, or any third-party scripts. There are no ads.</p>
+
+      <h2>Open source</h2>
+      <p>Unbound is open source under the AGPLv3 license. You can <a href="https://github.com/shaibuafeez/unbound-app" target="_blank" rel="noopener">audit the source code</a> to verify every claim on this page.</p>
+
+      <h2>Changes to this policy</h2>
+      <p>If this policy changes, the update will be reflected in the date at the top of this page and in the project's Git history.</p>
+
+      <h2>Contact</h2>
+      <p>Questions? Open an issue on <a href="https://github.com/shaibuafeez/unbound-app/issues" target="_blank" rel="noopener">GitHub</a>.</p>
+    </div>
+  </div>
+
+  <footer>
+    <div class="container">
+      <div class="footer-left">&copy; 2026 Unbound. Open source under AGPLv3.</div>
+      <ul class="footer-links">
+        <li><a href="index.html">Home</a></li>
+        <li><a href="privacy.html">Privacy</a></li>
+        <li><a href="terms.html">Terms</a></li>
+        <li><a href="https://github.com/shaibuafeez/unbound-app" target="_blank" rel="noopener">GitHub</a></li>
+      </ul>
+    </div>
+  </footer>
+
+</body>
+</html>

@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Terms of Service — Unbound</title>
+  <meta name="description" content="Unbound terms of service. Free, open-source software provided as-is." />
+  <meta name="theme-color" content="#0a0a0a" />
+  <link rel="icon" type="image/svg+xml" href="favicon.svg" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --bg: #050505;
+      --surface: #0a0a0a;
+      --surface-2: #111111;
+      --surface-3: #1a1a1a;
+      --border: #1e1e1e;
+      --border-2: #2a2a2a;
+      --text: #e8e8e8;
+      --text-secondary: #888888;
+      --text-tertiary: #555555;
+      --font: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+      --mono: 'JetBrains Mono', monospace;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: var(--font);
+      background: var(--bg);
+      color: var(--text);
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      line-height: 1.6;
+    }
+
+    ::selection {
+      background: rgba(255, 255, 255, 0.15);
+      color: #fff;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      opacity: 0.025;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+      pointer-events: none;
+      z-index: 9999;
+    }
+
+    .container {
+      max-width: 720px;
+      margin: 0 auto;
+      padding: 0 24px;
+    }
+
+    /* ── Nav ───────────────────────────────────────── */
+    nav {
+      padding: 20px 0;
+      border-bottom: 1px solid var(--border);
+    }
+    nav .container {
+      max-width: 1120px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .nav-logo {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      text-decoration: none;
+      color: var(--text);
+    }
+    .nav-logo svg { width: 24px; height: 24px; }
+    .nav-logo span { font-weight: 600; font-size: 14px; letter-spacing: -0.03em; }
+    .nav-back {
+      color: var(--text-secondary);
+      text-decoration: none;
+      font-size: 13px;
+      font-weight: 450;
+      transition: color 0.2s;
+    }
+    .nav-back:hover { color: var(--text); }
+
+    /* ── Content ───────────────────────────────────── */
+    .page-header {
+      padding: 80px 0 40px;
+      border-bottom: 1px solid var(--border);
+    }
+    .page-header h1 {
+      font-size: 36px;
+      font-weight: 800;
+      letter-spacing: -0.04em;
+      color: #fff;
+      margin-bottom: 8px;
+    }
+    .page-header .updated {
+      font-size: 13px;
+      color: var(--text-tertiary);
+      font-family: var(--mono);
+    }
+
+    .content {
+      padding: 48px 0 120px;
+    }
+    .content h2 {
+      font-size: 18px;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      color: #fff;
+      margin: 40px 0 12px;
+    }
+    .content h2:first-child {
+      margin-top: 0;
+    }
+    .content p {
+      font-size: 15px;
+      color: var(--text-secondary);
+      line-height: 1.75;
+      margin-bottom: 16px;
+    }
+    .content ul {
+      list-style: none;
+      margin-bottom: 16px;
+    }
+    .content li {
+      font-size: 15px;
+      color: var(--text-secondary);
+      line-height: 1.75;
+      padding-left: 20px;
+      position: relative;
+    }
+    .content li::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 11px;
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      background: var(--text-tertiary);
+    }
+    .content a {
+      color: var(--text);
+      text-decoration: underline;
+      text-underline-offset: 2px;
+      transition: color 0.2s;
+    }
+    .content a:hover { color: #fff; }
+    .content strong {
+      color: var(--text);
+      font-weight: 600;
+    }
+
+    /* ── Footer ────────────────────────────────────── */
+    footer {
+      padding: 48px 0;
+      border-top: 1px solid var(--border);
+    }
+    footer .container {
+      max-width: 1120px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .footer-left {
+      font-size: 13px;
+      color: var(--text-tertiary);
+      letter-spacing: -0.01em;
+    }
+    .footer-left a {
+      color: var(--text-secondary);
+      text-decoration: none;
+    }
+    .footer-links {
+      display: flex;
+      gap: 24px;
+      list-style: none;
+    }
+    .footer-links a {
+      color: var(--text-tertiary);
+      text-decoration: none;
+      font-size: 13px;
+      transition: color 0.2s;
+    }
+    .footer-links a:hover { color: var(--text-secondary); }
+
+    @media (max-width: 768px) {
+      .page-header { padding: 60px 0 32px; }
+      .page-header h1 { font-size: 28px; }
+      footer .container { flex-direction: column; gap: 16px; }
+    }
+  </style>
+</head>
+<body>
+
+  <nav>
+    <div class="container">
+      <a href="index.html" class="nav-logo">
+        <svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M16 4H9a5 5 0 00-5 5v14a5 5 0 005 5h14a5 5 0 005-5v-7" stroke="#fff" stroke-width="2.2" stroke-linecap="round"/><path d="M13.5 11.5l7 4.5-7 4.5v-9z" fill="#fff"/></svg>
+        <span>Unbound</span>
+      </a>
+      <a href="index.html" class="nav-back">&larr; Back to home</a>
+    </div>
+  </nav>
+
+  <div class="container">
+    <div class="page-header">
+      <h1>Terms of Service</h1>
+      <span class="updated">Last updated: May 5, 2026</span>
+    </div>
+
+    <div class="content">
+      <h2>Agreement</h2>
+      <p>By downloading, installing, or using Unbound ("the Software"), you agree to these terms. If you do not agree, do not use the Software.</p>
+
+      <h2>License</h2>
+      <p>Unbound is free, open-source software distributed under the <strong>GNU Affero General Public License v3.0</strong> (AGPLv3). You may use, modify, and redistribute the Software in accordance with that license. The full license text is available in the <a href="https://github.com/shaibuafeez/unbound-app/blob/main/LICENSE" target="_blank" rel="noopener">project repository</a>.</p>
+
+      <h2>No warranty</h2>
+      <p>The Software is provided <strong>"as is"</strong>, without warranty of any kind, express or implied, including but not limited to the warranties of merchantability, fitness for a particular purpose, and non-infringement. The authors and contributors are not responsible for any damages, data loss, or other issues arising from the use of the Software.</p>
+
+      <h2>User responsibility</h2>
+      <p>You are solely responsible for the content you create, record, edit, and distribute using Unbound. You agree not to use the Software to:</p>
+      <ul>
+        <li>Create content that violates applicable laws or regulations</li>
+        <li>Infringe on the intellectual property rights of others</li>
+        <li>Generate deepfakes or manipulated media intended to deceive, harass, or harm</li>
+        <li>Record individuals without their knowledge or consent where required by law</li>
+      </ul>
+
+      <h2>Third-party services</h2>
+      <p>Certain optional features of Unbound connect to third-party services:</p>
+      <ul>
+        <li><strong>Huru</strong> (huruai.xyz) — powers AI captions, translation, chat, and voice dubbing</li>
+        <li><strong>0G Compute Network</strong> — provides decentralized AI inference</li>
+      </ul>
+      <p>Use of these services is subject to their own terms and privacy policies. Unbound is not responsible for the availability, accuracy, or conduct of third-party services.</p>
+
+      <h2>Limitation of liability</h2>
+      <p>In no event shall the authors, contributors, or copyright holders be liable for any claim, damages, or other liability, whether in an action of contract, tort, or otherwise, arising from, out of, or in connection with the Software or the use or other dealings in the Software.</p>
+
+      <h2>Changes to these terms</h2>
+      <p>These terms may be updated from time to time. Changes will be reflected in the date at the top of this page and in the project's Git history. Continued use of the Software after changes constitutes acceptance of the new terms.</p>
+
+      <h2>Contact</h2>
+      <p>Questions about these terms? Open an issue on <a href="https://github.com/shaibuafeez/unbound-app/issues" target="_blank" rel="noopener">GitHub</a>.</p>
+    </div>
+  </div>
+
+  <footer>
+    <div class="container">
+      <div class="footer-left">&copy; 2026 Unbound. Open source under AGPLv3.</div>
+      <ul class="footer-links">
+        <li><a href="index.html">Home</a></li>
+        <li><a href="privacy.html">Privacy</a></li>
+        <li><a href="terms.html">Terms</a></li>
+        <li><a href="https://github.com/shaibuafeez/unbound-app" target="_blank" rel="noopener">GitHub</a></li>
+      </ul>
+    </div>
+  </footer>
+
+</body>
+</html>
