@@ -804,23 +804,45 @@
     }
     .waitlist-msg.success { color: #4ade80; }
     .waitlist-msg.error { color: #f87171; }
-    /* ── Waitlist section ──────────────────────────── */
-    .waitlist-section {
-      padding: 100px 0;
-      border-top: 1px solid var(--border);
-      text-align: center;
+    /* ── Waitlist modal ─────────────────────────────── */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 200;
+      background: rgba(0, 0, 0, 0.7);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s cubic-bezier(0.16, 1, 0.3, 1);
     }
-    .waitlist-box {
-      max-width: 480px;
-      margin: 40px auto 0;
-      padding: 48px 40px;
+    .modal-overlay.active {
+      opacity: 1;
+      pointer-events: auto;
+    }
+    .modal {
       background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 16px;
+      border: 1px solid var(--border-2);
+      border-radius: 20px;
+      padding: 48px 40px;
+      max-width: 440px;
+      width: 100%;
       position: relative;
-      overflow: hidden;
+      transform: translateY(16px) scale(0.97);
+      transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+      box-shadow:
+        0 0 0 1px rgba(255, 255, 255, 0.04),
+        0 24px 80px rgba(0, 0, 0, 0.6),
+        0 0 120px rgba(255, 255, 255, 0.02);
     }
-    .waitlist-box::before {
+    .modal-overlay.active .modal {
+      transform: translateY(0) scale(1);
+    }
+    .modal::before {
       content: '';
       position: absolute;
       top: 0;
@@ -828,22 +850,43 @@
       transform: translateX(-50%);
       width: 200px;
       height: 1px;
-      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
     }
-    .waitlist-box h3 {
-      font-size: 20px;
+    .modal-close {
+      position: absolute;
+      top: 16px;
+      right: 16px;
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: var(--surface-2);
+      color: var(--text-tertiary);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s;
+    }
+    .modal-close:hover {
+      background: var(--surface-3);
+      color: var(--text);
+      border-color: var(--border-2);
+    }
+    .modal h3 {
+      font-size: 22px;
       font-weight: 700;
       letter-spacing: -0.03em;
       color: #fff;
       margin-bottom: 8px;
     }
-    .waitlist-box p {
+    .modal p {
       font-size: 14px;
       color: var(--text-secondary);
-      margin-bottom: 24px;
+      margin-bottom: 28px;
       line-height: 1.6;
     }
-    .waitlist-box .waitlist-form {
+    .modal .waitlist-form {
       max-width: 100%;
       margin: 0 auto;
     }
@@ -920,7 +963,7 @@
           GitHub
         </a></li>
       </ul>
-      <a href="#waitlist" class="nav-cta">
+      <a href="#" class="nav-cta" data-open-waitlist>
         Join Waitlist
         <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
       </a>
@@ -937,7 +980,7 @@
         A screen recorder and video editor with AI dubbing, auto&#8209;zoom, cursor effects, and lip sync. Built for creators who ship fast.
       </p>
       <div class="hero-actions animate-up delay-3">
-        <a href="#waitlist" class="btn-primary">
+        <a href="#" class="btn-primary" data-open-waitlist>
           <svg xmlns="http://www.w3.org/2000/svg" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
           Join the Waitlist
         </a>
@@ -1093,23 +1136,21 @@
     </div>
   </section>
 
-  <!-- Waitlist -->
-  <section class="waitlist-section" id="waitlist">
-    <div class="container">
-      <div class="section-label reveal">Early Access</div>
-      <h2 class="section-title reveal">Be the first to try Unbound.</h2>
-      <p class="section-desc reveal" style="margin:0 auto">We're getting ready for launch. Join the waitlist and we'll let you know the moment it's ready.</p>
-      <div class="waitlist-box reveal">
-        <h3>Join the waitlist</h3>
-        <p>Free forever. No account needed. Get early access to macOS, Windows, and Linux.</p>
-        <form class="waitlist-form" id="waitlist-form">
-          <input type="email" name="email" placeholder="your@email.com" required />
-          <button type="submit">Join</button>
-        </form>
-        <div class="waitlist-msg"></div>
-      </div>
+  <!-- Waitlist Modal -->
+  <div class="modal-overlay" id="waitlist-modal">
+    <div class="modal">
+      <button class="modal-close" id="modal-close">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+      </button>
+      <h3>Join the waitlist</h3>
+      <p>Be the first to try Unbound. Free forever, no account needed. We'll notify you when it's ready for macOS, Windows, and Linux.</p>
+      <form class="waitlist-form" id="waitlist-form">
+        <input type="email" name="email" placeholder="your@email.com" required />
+        <button type="submit">Join</button>
+      </form>
+      <div class="waitlist-msg"></div>
     </div>
-  </section>
+  </div>
 
   <!-- Footer -->
   <footer>
@@ -1191,8 +1232,27 @@
     }, { threshold: 0.5 });
     document.querySelectorAll('.stats-grid').forEach(el => statObserver.observe(el));
 
-    // Waitlist — Supabase
-    // TODO: Replace these with your Supabase project values
+    // Waitlist modal
+    const modal = document.getElementById('waitlist-modal');
+    const modalClose = document.getElementById('modal-close');
+
+    function openModal(e) {
+      if (e) e.preventDefault();
+      modal.classList.add('active');
+      document.body.style.overflow = 'hidden';
+      setTimeout(() => modal.querySelector('input[name="email"]').focus(), 300);
+    }
+    function closeModal() {
+      modal.classList.remove('active');
+      document.body.style.overflow = '';
+    }
+
+    document.querySelectorAll('[data-open-waitlist]').forEach(el => el.addEventListener('click', openModal));
+    modalClose.addEventListener('click', closeModal);
+    modal.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && modal.classList.contains('active')) closeModal(); });
+
+    // Supabase
     const SUPABASE_URL = 'https://yahtsueiycpqbbzasmya.supabase.co';
     const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlhaHRzdWVpeWNwcWJiemFzbXlhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgwNzQwNTEsImV4cCI6MjA5MzY1MDA1MX0.ABgFOR1AqRLFDqa5i2QPlxZAosiIQYDYB719xmNJ6js';
 
