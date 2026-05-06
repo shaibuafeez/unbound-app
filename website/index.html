@@ -1102,13 +1102,10 @@
       <div class="waitlist-box reveal">
         <h3>Join the waitlist</h3>
         <p>Free forever. No account needed. Get early access to macOS, Windows, and Linux.</p>
-        <!-- Replace the div below with your LaunchList embed code from https://getlaunchlist.com -->
-        <div id="launchlist-embed">
-          <form class="waitlist-form" action="https://getlaunchlist.com/s/YOUR_LIST_ID" method="POST">
-            <input type="email" name="email" placeholder="your@email.com" required />
-            <button type="submit">Join</button>
-          </form>
-        </div>
+        <form class="waitlist-form" id="waitlist-form">
+          <input type="email" name="email" placeholder="your@email.com" required />
+          <button type="submit">Join</button>
+        </form>
         <div class="waitlist-msg"></div>
       </div>
     </div>
@@ -1194,40 +1191,51 @@
     }, { threshold: 0.5 });
     document.querySelectorAll('.stats-grid').forEach(el => statObserver.observe(el));
 
-    // Waitlist form — uses LaunchList (https://getlaunchlist.com)
-    // Replace YOUR_LIST_ID in the form action with your actual LaunchList list ID
-    document.querySelectorAll('.waitlist-form').forEach(form => {
-      form.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const input = form.querySelector('input[name="email"]');
-        const btn = form.querySelector('button');
-        const msg = form.parentElement.nextElementSibling || form.nextElementSibling;
-        const email = input.value.trim();
-        if (!email) return;
+    // Waitlist — Supabase
+    // TODO: Replace these with your Supabase project values
+    const SUPABASE_URL = 'https://yahtsueiycpqbbzasmya.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlhaHRzdWVpeWNwcWJiemFzbXlhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgwNzQwNTEsImV4cCI6MjA5MzY1MDA1MX0.ABgFOR1AqRLFDqa5i2QPlxZAosiIQYDYB719xmNJ6js';
 
-        btn.disabled = true;
-        btn.textContent = '...';
+    document.getElementById('waitlist-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const form = e.target;
+      const input = form.querySelector('input[name="email"]');
+      const btn = form.querySelector('button');
+      const msg = form.nextElementSibling;
+      const email = input.value.trim();
+      if (!email) return;
 
-        try {
-          const res = await fetch(form.action, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email })
-          });
-          if (res.ok) {
-            msg.textContent = "You're on the list!";
-            msg.className = 'waitlist-msg success';
-            input.value = '';
-          } else {
-            throw new Error();
-          }
-        } catch {
-          msg.textContent = 'Something went wrong. Try again.';
-          msg.className = 'waitlist-msg error';
+      btn.disabled = true;
+      btn.textContent = '...';
+
+      try {
+        const res = await fetch(`${SUPABASE_URL}/rest/v1/waitlist`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'apikey': SUPABASE_ANON_KEY,
+            'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+            'Prefer': 'return=minimal'
+          },
+          body: JSON.stringify({ email })
+        });
+        if (res.ok || res.status === 201) {
+          msg.textContent = "You're on the list!";
+          msg.className = 'waitlist-msg success';
+          input.value = '';
+        } else if (res.status === 409) {
+          msg.textContent = "You're already on the list!";
+          msg.className = 'waitlist-msg success';
+          input.value = '';
+        } else {
+          throw new Error();
         }
-        btn.disabled = false;
-        btn.textContent = 'Join';
-      });
+      } catch {
+        msg.textContent = 'Something went wrong. Try again.';
+        msg.className = 'waitlist-msg error';
+      }
+      btn.disabled = false;
+      btn.textContent = 'Join';
     });
   </script>
 
