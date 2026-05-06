@@ -315,7 +315,7 @@
       height: 13px;
       transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
     }
-    .nav-cta:hover svg { transform: translateY(2px); }
+    .nav-cta:hover svg { transform: translateX(3px); }
 
     /* ── Hero ───────────────────────────────────────── */
     .hero {
@@ -746,82 +746,7 @@
       font-weight: 550;
     }
 
-    /* ── Download ───────────────────────────────────── */
-    .download {
-      padding: 120px 0;
-      border-top: 1px solid var(--border);
-      text-align: center;
-    }
-    .download-cards {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 1px;
-      background: var(--border);
-      border-radius: 16px;
-      overflow: hidden;
-      margin-top: 48px;
-    }
-    .download-card {
-      background: var(--surface);
-      padding: 48px 32px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 20px;
-      transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-    }
-    .download-card:hover { background: var(--surface-2); }
-    .download-card svg {
-      width: 32px;
-      height: 32px;
-      color: var(--text-secondary);
-      transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-    }
-    .download-card:hover svg {
-      color: #fff;
-      transform: translateY(-4px) scale(1.1);
-    }
-    .download-card h3 {
-      font-size: 16px;
-      font-weight: 600;
-      letter-spacing: -0.02em;
-    }
-    .download-card .arch {
-      font-size: 12px;
-      color: var(--text-tertiary);
-      font-family: var(--mono);
-    }
-    .download-card .btn-dl {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      padding: 10px 20px;
-      background: var(--surface-3);
-      border: 1px solid var(--border-2);
-      border-radius: 10px;
-      color: var(--text);
-      text-decoration: none;
-      font-size: 13px;
-      font-weight: 550;
-      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-      letter-spacing: -0.01em;
-    }
-    .download-card .btn-dl:hover {
-      background: #fff;
-      border-color: #fff;
-      color: #000;
-      transform: translateY(-1px);
-      box-shadow: 0 4px 16px rgba(255, 255, 255, 0.1);
-    }
-    .download-card .btn-dl:active { transform: translateY(0); }
-    .download-note {
-      margin-top: 32px;
-      font-size: 13px;
-      color: var(--text-tertiary);
-      letter-spacing: -0.01em;
-    }
-
-    /* ── Waitlist form in cards ────────────────────── */
+    /* ── Waitlist form ────────────────────────────── */
     .waitlist-form {
       display: flex;
       gap: 6px;
@@ -879,12 +804,6 @@
     }
     .waitlist-msg.success { color: #4ade80; }
     .waitlist-msg.error { color: #f87171; }
-    .waitlist-label {
-      font-size: 12px;
-      color: var(--text-tertiary);
-      margin-bottom: 4px;
-    }
-
     /* ── Waitlist section ──────────────────────────── */
     .waitlist-section {
       padding: 100px 0;
@@ -968,7 +887,6 @@
       .stats-grid { grid-template-columns: repeat(2, 1fr); gap: 8px; }
       .features-grid { grid-template-columns: 1fr; }
       .ai-grid { grid-template-columns: 1fr; gap: 40px; }
-      .download-cards { grid-template-columns: 1fr; }
       footer .container { flex-direction: column; gap: 16px; }
     }
 
@@ -997,15 +915,14 @@
       <ul class="nav-links">
         <li><a href="#features">Features</a></li>
         <li><a href="#ai">AI</a></li>
-        <li><a href="#download">Download</a></li>
         <li><a href="https://github.com/shaibuafeez/unbound-app" target="_blank" rel="noopener" class="nav-gh">
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
           GitHub
         </a></li>
       </ul>
-      <a href="#download" class="nav-cta">
-        Download
-        <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12l7 7 7-7"/></svg>
+      <a href="#waitlist" class="nav-cta">
+        Join Waitlist
+        <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
       </a>
     </div>
   </nav>
@@ -1020,9 +937,9 @@
         A screen recorder and video editor with AI dubbing, auto&#8209;zoom, cursor effects, and lip sync. Built for creators who ship fast.
       </p>
       <div class="hero-actions animate-up delay-3">
-        <a href="#download" class="btn-primary">
-          <svg xmlns="http://www.w3.org/2000/svg" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14"/><path d="m19 12-7 7-7-7"/></svg>
-          Download
+        <a href="#waitlist" class="btn-primary">
+          <svg xmlns="http://www.w3.org/2000/svg" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+          Join the Waitlist
         </a>
         <a href="https://github.com/shaibuafeez/unbound-app" target="_blank" rel="noopener" class="btn-secondary">
           <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
@@ -1176,70 +1093,22 @@
     </div>
   </section>
 
-  <!-- Download -->
-  <section class="download" id="download">
-    <div class="container">
-      <div class="section-label reveal">Download</div>
-      <h2 class="section-title reveal">Ready when you are.</h2>
-      <p class="section-desc reveal" style="margin:0 auto">Free. No account. No tracking. Just download and go.</p>
-      <div class="download-cards reveal">
-        <div class="download-card">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/></svg>
-          <h3>macOS</h3>
-          <span class="arch">Apple Silicon</span>
-          <a href="https://github.com/shaibuafeez/unbound-app/releases/download/v1.1.24/Unbound-arm64.dmg" class="btn-dl">
-            Download .dmg
-            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12l7 7 7-7"/></svg>
-          </a>
-          <span class="waitlist-label">Get notified about updates</span>
-          <form class="waitlist-form" data-platform="macOS">
-            <input type="email" placeholder="your@email.com" required />
-            <button type="submit">Notify me</button>
-          </form>
-          <div class="waitlist-msg"></div>
-        </div>
-        <div class="download-card">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M0 3.449L9.75 2.1v9.451H0m10.949-9.602L24 0v11.4H10.949M0 12.6h9.75v9.451L0 20.699M10.949 12.6H24V24l-12.9-1.801"/></svg>
-          <h3>Windows</h3>
-          <span class="arch">x64 &middot; Coming Soon</span>
-          <span class="waitlist-label">Get notified when ready</span>
-          <form class="waitlist-form" data-platform="Windows">
-            <input type="email" placeholder="your@email.com" required />
-            <button type="submit">Notify me</button>
-          </form>
-          <div class="waitlist-msg"></div>
-        </div>
-        <div class="download-card">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M12.504 0c-.155 0-.311.015-.466.046-.735.156-1.312.669-1.59 1.31C10.2 1.899 9.9 2.8 9.9 3.9c0 .476.063.931.171 1.36.022.086-.006.178-.072.24l-.556.47a.365.365 0 01-.28.085l-.735-.073c-.227-.022-.447.078-.575.273-.128.195-.128.445-.008.644l.343.567c.088.145.067.332-.052.455l-.505.52a.361.361 0 00-.073.392l.258.617a.363.363 0 01-.048.394l-.425.49a.363.363 0 00.008.508l.485.46c.117.11.155.28.096.43l-.203.52a.364.364 0 00.11.41l.558.415c.12.09.177.243.147.39l-.109.54a.364.364 0 00.263.407l.596.135c.16.036.273.175.285.34l.06.738c.012.164.126.302.287.347l.59.165c.16.045.273.186.283.348l.038.58c.01.163.124.3.283.343l1.1.302c.16.044.33-.01.43-.136l.348-.44c.108-.137.3-.17.443-.077l.544.35c.143.092.333.073.455-.046l.398-.39a.343.343 0 01.445-.047l.584.328c.154.086.346.05.458-.087l.359-.44a.347.347 0 01.453-.093l.527.29a.357.357 0 00.47-.073l.32-.39a.347.347 0 01.457-.083l.514.265a.354.354 0 00.467-.1l.277-.385a.347.347 0 01.46-.1l.15.076C20.1 14.095 21 12.157 21 10c0-4.486-3.8-8.124-8.496-8.124z"/></svg>
-          <h3>Linux</h3>
-          <span class="arch">x64 AppImage &middot; Coming Soon</span>
-          <span class="waitlist-label">Get notified when ready</span>
-          <form class="waitlist-form" data-platform="Linux">
-            <input type="email" placeholder="your@email.com" required />
-            <button type="submit">Notify me</button>
-          </form>
-          <div class="waitlist-msg"></div>
-        </div>
-      </div>
-      <p class="download-note">
-        macOS: right-click &rarr; Open on first launch &middot; <a href="https://github.com/shaibuafeez/unbound-app/releases/download/v1.1.24/Unbound-x64.dmg" style="color:var(--text-secondary)">Intel Mac? Download here</a> &middot; <a href="https://github.com/shaibuafeez/unbound-app" style="color:var(--text-secondary)">Source on GitHub</a>
-      </p>
-    </div>
-  </section>
-
   <!-- Waitlist -->
   <section class="waitlist-section" id="waitlist">
     <div class="container">
       <div class="section-label reveal">Early Access</div>
-      <h2 class="section-title reveal">Stay in the loop.</h2>
-      <p class="section-desc reveal" style="margin:0 auto">Get notified about new features, platform releases, and updates. No spam.</p>
+      <h2 class="section-title reveal">Be the first to try Unbound.</h2>
+      <p class="section-desc reveal" style="margin:0 auto">We're getting ready for launch. Join the waitlist and we'll let you know the moment it's ready.</p>
       <div class="waitlist-box reveal">
         <h3>Join the waitlist</h3>
-        <p>Be the first to know when new versions drop.</p>
-        <form class="waitlist-form" data-platform="General">
-          <input type="email" placeholder="your@email.com" required />
-          <button type="submit">Join</button>
-        </form>
+        <p>Free forever. No account needed. Get early access to macOS, Windows, and Linux.</p>
+        <!-- Replace the div below with your LaunchList embed code from https://getlaunchlist.com -->
+        <div id="launchlist-embed">
+          <form class="waitlist-form" action="https://getlaunchlist.com/s/YOUR_LIST_ID" method="POST">
+            <input type="email" name="email" placeholder="your@email.com" required />
+            <button type="submit">Join</button>
+          </form>
+        </div>
         <div class="waitlist-msg"></div>
       </div>
     </div>
@@ -1325,17 +1194,14 @@
     }, { threshold: 0.5 });
     document.querySelectorAll('.stats-grid').forEach(el => statObserver.observe(el));
 
-    // Waitlist form submissions via Formspree
-    // TODO: Replace YOUR_FORM_ID with your actual Formspree form ID from https://formspree.io
-    const FORMSPREE_ID = 'YOUR_FORM_ID';
-
+    // Waitlist form — uses LaunchList (https://getlaunchlist.com)
+    // Replace YOUR_LIST_ID in the form action with your actual LaunchList list ID
     document.querySelectorAll('.waitlist-form').forEach(form => {
       form.addEventListener('submit', async (e) => {
         e.preventDefault();
-        const input = form.querySelector('input');
+        const input = form.querySelector('input[name="email"]');
         const btn = form.querySelector('button');
-        const msg = form.nextElementSibling;
-        const platform = form.dataset.platform;
+        const msg = form.parentElement.nextElementSibling || form.nextElementSibling;
         const email = input.value.trim();
         if (!email) return;
 
@@ -1343,10 +1209,10 @@
         btn.textContent = '...';
 
         try {
-          const res = await fetch(`https://formspree.io/f/${FORMSPREE_ID}`, {
+          const res = await fetch(form.action, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
-            body: JSON.stringify({ email, platform })
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email })
           });
           if (res.ok) {
             msg.textContent = "You're on the list!";
@@ -1360,7 +1226,7 @@
           msg.className = 'waitlist-msg error';
         }
         btn.disabled = false;
-        btn.textContent = form.closest('.waitlist-box') ? 'Join' : 'Notify me';
+        btn.textContent = 'Join';
       });
     });
   </script>
